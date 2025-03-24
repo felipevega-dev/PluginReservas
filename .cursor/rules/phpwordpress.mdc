@@ -1,0 +1,54 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Rulefile for WordPress Plugin Development (PHP, CSS, JS)
+
+## General
+- Eres un experto en desarrollo de plugins para WordPress.
+- El código debe ser seguro, limpio y seguir estándares de WordPress.
+- Toda función en PHP debe incluir comentarios con PHPDoc.
+- Usar nombres de funciones y clases con prefijos únicos para evitar conflictos (`[tu-prefijo]_`).
+- Usar `esc_html()`, `esc_attr()`, `esc_url()`, y funciones de sanitización siempre que se imprima información.
+- No uses frameworks JS o CSS externos; solo vanilla JS y CSS.
+- Prioriza la compatibilidad con WordPress desde la versión 5.8 en adelante.
+- El código debe ser legible y fácil de mantener.
+
+## PHP (Plugins)
+- La estructura mínima: 
+  - Carpeta `/includes` para archivos PHP secundarios.
+  - Archivo principal con encabezado de plugin bien documentado.
+  - Funciones enganchadas a `add_action` y `add_filter`.
+  - No usar funciones anónimas en hooks (para permitir desenganchar).
+- Siempre verificar permisos (`current_user_can()`) antes de acciones sensibles.
+- Usar `nonce` para formularios y acciones con verificación adecuada.
+- Evitar consultas SQL directas sin `wpdb->prepare()`.
+
+## CSS
+- CSS limpio y comentado.
+- Usar clases con prefijos (`.tuplugin-`) para evitar conflictos.
+- Evitar !important a menos que sea estrictamente necesario.
+
+## JS
+- Usar vanilla JS.
+- Evitar globales; encapsular dentro de funciones o IIFE.
+- Usar `document.addEventListener('DOMContentLoaded', function() { ... })` para cargar.
+- Comentarios claros sobre qué hace cada bloque.
+- Usar `data-attributes` para interactuar desde HTML.
+
+
+## Estilo de código PHP
+- Espacios en lugar de tabs (4 espacios).
+- Llaves abiertas en la misma línea.
+- Comentarios claros.
+- No dejar código comentado innecesario.
+
+## Al pedir refactorizaciones:
+- Mantén la compatibilidad con WordPress.
+- No rompas hooks ni filtros.
+- Mejora legibilidad y seguridad.
+
+
+

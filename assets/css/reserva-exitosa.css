@@ -1,0 +1,517 @@
+/* Estilos para la página de reserva exitosa */
+.reserva-exitosa-container {
+    max-width: 1000px;
+    margin: 40px auto;
+    font-family: Arial, sans-serif;
+    color: #333;
+}
+
+.reserva-exitosa-card {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    padding: 40px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.reserva-exitosa-card:hover {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    transform: translateY(-3px);
+}
+
+/* Cabecera con ícono y título */
+.reserva-exitosa-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 25px;
+    border-bottom: 1px solid #f0f0f0;
+    position: relative;
+}
+
+.reserva-exitosa-icon {
+    margin: 0 auto 20px;
+    width: 80px;
+    height: 80px;
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.reserva-exitosa-header h1 {
+    color: #c52f2e;
+    font-size: 28px;
+    margin: 0 0 15px;
+    text-align: center;
+    font-weight: bold;
+    animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.reserva-numero {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: #f8f9fa;
+    border-radius: 30px;
+    font-weight: bold;
+    color: #003366;
+    font-size: 16px;
+    margin-top: 15px;
+    border: 1px solid #eaeaea;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* Mensaje de confirmación */
+.reserva-exitosa-mensaje {
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 17px;
+    line-height: 1.6;
+    color: #444;
+    background-color: #f5f9ff;
+    padding: 20px;
+    border-radius: 10px;
+    border-left: 4px solid #4a6fe3;
+}
+
+.reserva-exitosa-mensaje p {
+    margin: 10px 0;
+}
+
+.reserva-exitosa-mensaje strong {
+    color: #003366;
+    font-weight: 600;
+}
+
+/* Botones de acción */
+.reserva-exitosa-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 30px 0;
+}
+
+.btn-imprimir, 
+.btn-volver {
+    padding: 12px 20px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+    border: none;
+}
+
+.btn-imprimir {
+    background-color: #003366;
+    color: #fff;
+}
+
+.btn-imprimir:hover {
+    background-color: #002650;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(0,0,0,0.2);
+}
+
+.btn-volver {
+    background-color: #f8f9fa;
+    color: #333;
+    border: 1px solid #ddd;
+}
+
+.btn-volver:hover {
+    background-color: #f1f1f1;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(0,0,0,0.15);
+}
+
+.btn-imprimir svg, 
+.btn-volver svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Secciones de detalles */
+.reserva-exitosa-detalles {
+    margin: 30px 0;
+}
+
+.reserva-exitosa-detalles h2 {
+    color: #003366;
+    font-size: 22px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eaeaea;
+}
+
+.detalles-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+}
+
+.detalles-seccion {
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    padding: 20px;
+    border: 1px solid #eaeaea;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    height: 100%;
+}
+
+.detalles-seccion h3 {
+    color: #003366;
+    font-size: 18px;
+    margin: 0 0 15px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eaeaea;
+}
+
+.datos-personales {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.datos-personales li {
+    padding: 8px 0;
+    border-bottom: 1px dashed #eaeaea;
+}
+
+.datos-personales li:last-child {
+    border-bottom: none;
+}
+
+.datos-personales strong {
+    color: #003366;
+    display: inline-block;
+    width: 140px;
+}
+
+/* Tabla de productos */
+.productos-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.productos-table th {
+    background-color: #003366;
+    color: white;
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.productos-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eaeaea;
+    font-size: 14px;
+}
+
+.productos-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.productos-table tr:hover td {
+    background-color: #f5f9ff;
+}
+
+.productos-table tfoot tr {
+    font-weight: bold;
+    background-color: #f5f9ff;
+}
+
+.productos-table tfoot td {
+    border-top: 2px solid #eaeaea;
+    color: #003366;
+}
+
+/* Información adicional */
+.reserva-exitosa-info {
+    background-color: #fff3e0;
+    padding: 20px 25px;
+    margin-top: 30px;
+    border-radius: 10px;
+    border-left: 4px solid #ff9800;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.reserva-exitosa-info h3 {
+    color: #e65100;
+    font-size: 18px;
+    margin: 0 0 15px;
+}
+
+.reserva-exitosa-info ol {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.reserva-exitosa-info li {
+    margin-bottom: 10px;
+    padding-left: 5px;
+}
+
+.reserva-exitosa-info a {
+    color: #0073aa;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.reserva-exitosa-info a:hover {
+    text-decoration: underline;
+    color: #00a0d2;
+}
+
+/* Estilos para la página de reserva no encontrada */
+.reserva-no-encontrada {
+    max-width: 600px;
+    margin: 40px auto;
+    text-align: center;
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.reserva-no-encontrada h1 {
+    color: #dc3545;
+    font-size: 24px;
+    margin: 0 0 20px;
+}
+
+.reserva-no-encontrada p {
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.reserva-no-encontrada .btn-volver {
+    display: inline-flex;
+    margin-top: 20px;
+}
+
+/* Responsive */
+@media only screen and (max-width: 767px) {
+    .reserva-exitosa-card {
+        padding: 25px 20px;
+        margin: 15px auto;
+        border-radius: 10px;
+    }
+    
+    .reserva-exitosa-header h1 {
+        font-size: 22px;
+    }
+    
+    .detalles-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .productos-table {
+        display: block;
+        overflow-x: auto;
+    }
+    
+    .reserva-exitosa-actions {
+        flex-direction: column;
+    }
+    
+    .btn-imprimir, .btn-volver {
+        width: 100%;
+    }
+}
+
+/* Para dispositivos muy pequeños */
+@media only screen and (max-width: 480px) {
+    .reserva-exitosa-card {
+        padding: 20px 15px;
+        margin: 10px;
+    }
+    
+    .reserva-exitosa-header h1 {
+        font-size: 20px;
+    }
+    
+    .reserva-numero {
+        font-size: 14px;
+        padding: 6px 12px;
+    }
+    
+    .detalles-seccion {
+        padding: 15px;
+    }
+    
+    .datos-personales strong {
+        width: 100px;
+        font-size: 13px;
+    }
+    
+    .productos-table th,
+    .productos-table td {
+        padding: 10px 8px;
+        font-size: 13px;
+    }
+}
+
+/* Evitar problemas con algunos temas WordPress */
+.entry-content .reserva-exitosa,
+.post-content .reserva-exitosa,
+.site-content .reserva-exitosa {
+    width: 100% !important;
+    max-width: 800px !important; 
+    margin: 30px auto !important;
+}
+
+/* Agregar footer de créditos similar al del admin */
+.reserva-footer-credits {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    font-size: 13px;
+    color: #777;
+}
+
+.reserva-footer-credits a {
+    color: #0073aa;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.reserva-footer-credits a:hover {
+    color: #00a0d2;
+    text-decoration: underline;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+    opacity: 0;
+}
+
+.slide-in {
+    animation: slideIn 0.6s ease-out forwards;
+    opacity: 0;
+}
+
+/* Estilos para impresión */
+@media print {
+    body {
+        background-color: white !important;
+        font-size: 12pt;
+    }
+    
+    .reserva-exitosa-container {
+        margin: 0;
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .reserva-exitosa-card {
+        box-shadow: none !important;
+        padding: 0 !important;
+        border: none !important;
+        margin: 0 !important;
+    }
+    
+    .reserva-exitosa-actions,
+    .btn-imprimir,
+    .btn-volver {
+        display: none !important;
+    }
+    
+    .productos-table {
+        page-break-inside: avoid;
+        width: 100%;
+    }
+    
+    .detalles-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        page-break-inside: avoid;
+    }
+    
+    .reserva-exitosa-info {
+        page-break-inside: avoid;
+        border-left: 2px solid #ff9800;
+        background-color: white !important;
+    }
+    
+    /* Para evitar que el fondo de las secciones se vea gris en la impresión */
+    .detalles-seccion,
+    .productos-table tr:nth-child(even) {
+        background-color: white !important;
+    }
+    
+    .productos-table th {
+        background-color: #f1f1f1 !important;
+        color: black !important;
+    }
+    
+    /* Marca de agua para la impresión */
+    .reserva-exitosa-container::after {
+        content: "Scolari - Comprobante de Reserva";
+        position: fixed;
+        top: 50%;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        font-size: 48pt;
+        color: rgba(0,0,0,0.05);
+        transform: rotate(-35deg);
+        z-index: -1;
+    }
+} 

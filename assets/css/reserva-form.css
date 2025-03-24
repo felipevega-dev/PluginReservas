@@ -1,0 +1,1083 @@
+/* =====================================
+   CONTENEDOR PRINCIPAL Y ESTRUCTURA GENERAL
+   ===================================== */
+.reserva-form {
+    max-width: 1200px !important;
+    margin: 0 auto 30px !important;
+    font-family: Arial, sans-serif !important;
+    color: #333 !important;
+    background-color: #f9f9f9 !important;
+    padding: 20px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1) !important;
+}
+
+.form-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+/* Secciones de formulario */
+.seccion-form {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.seccion-form:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.12);
+}
+
+/* Secciones específicas */
+.seccion-datos-personales {
+    flex: 1;
+    min-width: calc(50% - 20px);
+    margin-bottom: 20px;
+}
+
+.seccion-productos-confirmacion {
+    flex: 1;
+    min-width: calc(50% - 20px);
+    margin-bottom: 20px;
+}
+
+.seccion-guia-tallas {
+    width: 100%;
+}
+
+.seccion-encabezado {
+    display: flex;
+    align-items: center;
+    background-color: #003366; /* Azul Scolari */
+    padding: 15px 20px;
+    border-radius: 8px 8px 0 0;
+}
+
+.seccion-numero {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 32px;
+    height: 32px;
+    background-color: #c52f2e; /* Rojo Scolari */
+    color: white;
+    font-weight: bold;
+    border-radius: 50%;
+    margin-right: 12px;
+    font-size: 16px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.seccion-contenido {
+    padding: 25px;
+}
+
+.reserva-form h3 {
+    margin: 0;
+    font-size: 20px;
+    color: #fff;
+    font-weight: 600;
+}
+
+.reserva-form h4 {
+    margin: 10px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+/* Estructura de filas y columnas del formulario */
+.form-row {
+    margin-bottom: 15px;
+}
+
+.form-row:last-child {
+    margin-bottom: 0;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+/* Campos de formulario */
+.reserva-form label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #444;
+    font-size: 14px;
+}
+
+.reserva-form input[type="text"],
+.reserva-form input[type="email"],
+.reserva-form input[type="date"],
+.reserva-form input[type="number"],
+.reserva-form input[type="tel"],
+.reserva-form select {
+    width: 100% !important;
+    padding: 12px 15px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 6px !important;
+    font-size: 15px !important;
+    transition: all 0.3s ease !important;
+    background-color: #f9f9f9 !important;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.05) !important;
+}
+
+.reserva-form input:focus,
+.reserva-form select:focus {
+    outline: none !important;
+    border-color: #0073aa !important;
+    box-shadow: 0 0 0 3px rgba(0,115,170,0.15) !important;
+    background-color: #fff !important;
+}
+
+/* Botones */
+.reserva-form input[type="submit"],
+.reserva-form button {
+    background-color: #0073aa;
+    color: #fff;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 15px;
+    transition: all 0.2s ease;
+}
+
+.reserva-form input[type="submit"]:hover,
+.reserva-form button:hover {
+    background-color: #005177;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+}
+
+/* Botón de reserva destacado */
+.boton-reservar {
+    width: 100% !important;
+    max-width: 300px !important;
+    padding: 16px !important;
+    font-size: 18px !important;
+    margin: 20px auto 0 !important;
+    background-color: #c52f2e !important; 
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    box-shadow: 0 4px 10px rgba(197, 47, 46, 0.25) !important;
+    display: block !important;
+    text-align: center !important;
+    border-radius: 6px !important;
+    font-weight: bold !important;
+    transition: all 0.3s ease !important;
+}
+
+.boton-reservar:hover {
+    background-color: #a02827 !important;
+    box-shadow: 0 6px 15px rgba(197, 47, 46, 0.35) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Centrado de botones */
+.center-button {
+    display: flex;
+    justify-content: center;
+}
+
+/* =====================================
+   PRODUCTOS
+   ===================================== */
+/* Línea de producto individual */
+.producto-line {
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 20px;
+    position: relative;
+    background-color: #fff;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+.producto-line:hover {
+    box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+    transform: translateY(-3px);
+    border-color: #ccc;
+}
+
+/* Contenido de línea de producto */
+.producto-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.producto-title {
+    font-weight: bold;
+    color: #003366;
+    font-size: 16px;
+    flex: 1;
+    margin-left: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.producto-numero {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background-color: #003366;
+    color: white;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.producto-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.producto-detalles {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    align-items: center;
+    width: 100%;
+}
+
+.column-image {
+    text-align: center;
+    max-width: 100%;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.column-image img {
+    max-width: 100%;
+    height: auto;
+    max-height: 250px;
+    object-fit: contain;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.column-fields {
+    flex: 1;
+    width: 100%;
+}
+
+/* Estilo mejorado para el precio y subtotal */
+.producto-precio {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    border: 1px solid #eaeaea;
+}
+
+.precio-unitario, .subtotal {
+    font-size: 15px !important;
+    color: #444 !important;
+}
+
+.precio-unitario span, .subtotal span {
+    font-weight: bold !important;
+    color: #c52f2e !important;
+    margin-left: 5px !important;
+}
+
+/* Botones de producto */
+.boton-eliminar {
+    position: absolute !important;
+    top: 15px !important;
+    right: 15px !important;
+    background: #dc3232 !important;
+    color: #fff !important;
+    width: 28px !important;
+    height: 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: none !important;
+    cursor: pointer !important;
+    border-radius: 50% !important;
+    font-size: 16px !important;
+    transition: all 0.2s ease !important;
+    padding: 0 !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15) !important;
+}
+
+.boton-eliminar:hover {
+    background: #c62828 !important;
+    transform: scale(1.1) !important;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2) !important;
+}
+
+.btn-agregar-producto {
+    background-color: #0073aa !important;
+    color: white !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 12px 20px !important;
+    border-radius: 6px !important;
+    margin: 15px auto !important;
+    cursor: pointer !important;
+    transition: all 0.3s !important;
+    font-weight: bold !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+}
+
+.btn-agregar-producto:hover {
+    background-color: #005a87 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+}
+
+.icono-mas {
+    font-weight: bold;
+    font-size: 18px;
+    margin-right: 8px;
+}
+
+/* =====================================
+   RESUMEN MEJORADO
+   ===================================== */
+.resumen-confirmacion {
+    margin-top: 30px;
+    background-color: #f5f9ff;
+    border: 1px solid #d1e3ff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+}
+
+.resumen-titulo {
+    font-size: 18px;
+    font-weight: bold;
+    color: #003366;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #d1e3ff;
+    padding-bottom: 10px;
+}
+
+.resumen-detalle {
+    font-size: 15px;
+    color: #444;
+    margin-bottom: 15px;
+}
+
+.resumen-productos-lista {
+    margin: 15px 0;
+    max-height: 200px;
+    overflow-y: auto;
+    border-top: 1px solid #eaeaea;
+    padding-top: 10px;
+}
+
+.resumen-producto-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed #eaeaea;
+}
+
+.resumen-producto-info {
+    flex: 1;
+}
+
+.resumen-producto-nombre {
+    font-weight: bold;
+    color: #333;
+}
+
+.resumen-producto-detalle {
+    font-size: 14px;
+    color: #666;
+}
+
+.resumen-producto-precio {
+    font-weight: bold;
+    color: #c52f2e;
+    white-space: nowrap;
+    margin-left: 15px;
+}
+
+.resumen-total {
+    font-size: 18px !important;
+    font-weight: bold !important;
+    text-align: right !important;
+    color: #003366 !important;
+    margin-top: 15px !important;
+    padding-top: 15px !important;
+    border-top: 2px solid #d1e3ff !important;
+}
+
+.resumen-total strong {
+    color: #c52f2e !important;
+    font-size: 20px !important;
+    margin-left: 8px !important;
+}
+
+.resumen-vacio {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-style: italic;
+}
+
+/* =====================================
+   GUÍAS DE TALLAS
+   ===================================== */
+.guia-botones {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.boton-guia {
+    text-align: center;
+    padding: 12px;
+    background-color: #f1c40f;
+    color: #333;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.boton-guia:hover {
+    background-color: #f39c12;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.guia-contenedor {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.3s ease;
+    border: 1px solid #ddd;
+    padding: 0;
+    margin-top: 10px;
+    display: none;
+    background-color: #fff;
+    border-radius: 4px;
+}
+
+.guia-contenedor.show {
+    display: block !important;
+    max-height: 800px !important;
+    padding: 15px !important;
+    overflow: auto !important;
+}
+
+.guia-contenedor img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+/* =====================================
+   GUÍA DE PRODUCTOS
+   ===================================== */
+.productos-guia {
+    background-color: #f8f9fa;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.productos-guia h4 {
+    color: #0073aa;
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 18px;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 10px;
+}
+
+.productos-instruccion {
+    font-size: 15px;
+    margin-bottom: 20px;
+    color: #555;
+}
+
+.productos-catalogo {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+}
+
+.producto-catalogo-item {
+    display: flex;
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.producto-catalogo-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.producto-catalogo-item img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-right: 1px solid #e0e0e0;
+}
+
+.producto-catalogo-info {
+    padding: 12px;
+    flex: 1;
+}
+
+.producto-catalogo-info h5 {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+    color: #0073aa;
+}
+
+.producto-catalogo-info p {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+
+/* =====================================
+   BOTÓN DE RESERVA MEJORADO
+   ===================================== */
+.boton-reservar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 16px 25px !important;
+    font-size: 18px !important;
+    margin: 20px auto 10px !important;
+    background-color: #c52f2e !important;
+    color: white !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    box-shadow: 0 4px 15px rgba(197, 47, 46, 0.3) !important;
+    border-radius: 8px !important;
+    font-weight: bold !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+    position: relative !important;
+    overflow: hidden !important;
+    border: none !important;
+}
+
+.boton-reservar:before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent) !important;
+    transition: all 0.4s ease !important;
+}
+
+.boton-reservar:hover {
+    background-color: #a02827 !important;
+    transform: translateY(-3px) !important;
+    box-shadow: 0 7px 20px rgba(197, 47, 46, 0.4) !important;
+}
+
+.boton-reservar:hover:before {
+    left: 100% !important;
+}
+
+.boton-reservar-icono {
+    margin-right: 10px !important;
+    font-size: 22px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.boton-reservar-texto {
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+/* =====================================
+   TABLET (>= 768px)
+   ===================================== */
+@media (min-width: 768px) {
+    .two-columns {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+    
+    .linea-producto-contenido {
+        flex-direction: row;
+    }
+    
+    .linea-producto-imagen {
+        flex: 0 0 180px;
+        margin-right: 15px;
+        margin-bottom: 0;
+    }
+    
+    .producto-detalles {
+        grid-template-columns: 1fr;
+    }
+    
+    .producto-precio {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+    
+    .guia-botones {
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .boton-guia {
+        flex: 0 0 auto;
+        min-width: 150px;
+    }
+    
+    .productos-catalogo {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .boton-reservar {
+        max-width: 300px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+}
+
+/* =====================================
+   ESCRITORIO (>= 1024px)
+   ===================================== */
+@media (min-width: 1024px) {
+    .form-container {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+    
+    .panel-izquierdo {
+        flex: 0 0 60%;
+        margin-right: 20px;
+    }
+    
+    .panel-derecho {
+        flex: 0 0 38%;
+        position: sticky;
+        top: 20px;
+    }
+    
+    .producto-detalles {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+}
+
+/* Para dispositivos muy pequeños */
+@media (max-width: 480px) {
+    .seccion-contenido {
+        padding: 15px;
+    }
+    
+    .seccion-encabezado {
+        padding: 12px 15px;
+    }
+    
+    .seccion-numero {
+        width: 25px;
+        height: 25px;
+        font-size: 14px;
+    }
+    
+    .reserva-form h3 {
+        font-size: 16px;
+    }
+}
+
+/* Manejar posibles conflictos con temas de WordPress */
+.entry-content .reserva-form {
+    width: 100% !important;
+    max-width: 1200px !important;
+}
+
+/* Forzar la visualización correcta en móvil */
+@media (max-width: 767px) {
+    .form-container {
+        flex-direction: column;
+    }
+    
+    .seccion-datos-personales,
+    .seccion-productos-confirmacion {
+        min-width: 100%;
+        flex: none;
+        width: 100%;
+    }
+    
+    .reserva-form {
+        padding: 10px !important;
+    }
+    
+    .seccion-contenido {
+        padding: 15px !important;
+    }
+    
+    .producto-line {
+        padding: 15px !important;
+    }
+    
+    .producto-detalles {
+        grid-template-columns: 1fr !important;
+        gap: 10px;
+    }
+    
+    .column-image {
+        max-width: 100%;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+    
+    .column-image img {
+        max-height: 180px;
+    }
+    
+    .column-fields {
+        width: 100%;
+    }
+    
+    .producto-precio {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .form-row {
+        margin-bottom: 12px;
+    }
+    
+    .producto-header {
+        padding-bottom: 8px;
+        margin-bottom: 10px;
+    }
+    
+    .producto-title {
+        font-size: 14px;
+    }
+    
+    .boton-eliminar {
+        top: 8px !important;
+        right: 8px !important;
+    }
+    
+    .btn-agregar-producto {
+        width: 100% !important;
+    }
+    
+    .boton-reservar {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 15px !important;
+    }
+    
+    .reserva-form input[type="text"],
+    .reserva-form input[type="email"],
+    .reserva-form input[type="date"],
+    .reserva-form input[type="number"],
+    .reserva-form input[type="tel"],
+    .reserva-form select {
+        padding: 10px 12px !important;
+        font-size: 14px !important;
+    }
+    
+    .reserva-form label {
+        font-size: 13px !important;
+    }
+    
+    .seccion-numero {
+        width: 24px;
+        height: 24px;
+        font-size: 13px;
+    }
+    
+    .seccion-encabezado {
+        padding: 10px 15px;
+    }
+    
+    .resumen-confirmacion {
+        padding: 15px;
+    }
+    
+    .resumen-titulo {
+        font-size: 16px;
+    }
+}
+
+/* Media query específico para pantallas muy pequeñas */
+@media (max-width: 480px) {
+    .form-row .form-col-half {
+        width: 100%;
+    }
+    
+    .form-row {
+        flex-direction: column;
+    }
+    
+    .producto-precio {
+        text-align: center;
+    }
+    
+    .seccion-encabezado h3 {
+        font-size: 15px !important;
+    }
+}
+
+/* Ajustes adicionales para teléfonos pequeños */
+@media (max-width: 360px) {
+    .producto-line {
+        padding: 12px 10px !important;
+    }
+    
+    .producto-title {
+        font-size: 13px;
+        max-width: 160px;
+    }
+}
+
+/* Estilo para aislar el formulario de reserva de otros estilos */
+.reserva-form,
+.reserva-form * {
+    box-sizing: border-box !important;
+}
+
+/* Sobreescribir estilos de CF7 y otros plugins */
+.reserva-form input[type="text"],
+.reserva-form input[type="email"],
+.reserva-form input[type="date"],
+.reserva-form input[type="number"],
+.reserva-form input[type="tel"],
+.reserva-form select,
+.reserva-form textarea {
+    width: 100% !important;
+    padding: 10px 12px !important;
+    margin: 0 0 8px 0 !important;
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    font-size: 14px !important;
+    transition: border-color 0.3s, box-shadow 0.3s !important;
+    background-color: #f9f9f9 !important;
+    box-sizing: border-box !important;
+    height: auto !important;
+    line-height: normal !important;
+    font-family: Arial, sans-serif !important;
+}
+
+/* Estilos para botones específicos del formulario */
+.reserva-form button,
+.reserva-form input[type="submit"] {
+    background-color: #0073aa !important;
+    color: #fff !important;
+    padding: 10px 16px !important;
+    border: none !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+    margin: 0 !important;
+    width: auto !important;
+    font-family: Arial, sans-serif !important;
+}
+
+/* Botón de reserva con estilo Scolari - versión corregida */
+.reserva-form .boton-reservar {
+    width: 100% !important;
+    max-width: 250px !important; /* Tamaño razonable */
+    padding: 16px !important;
+    font-size: 18px !important;
+    margin: 20px auto !important; /* Centrado con margen automático */
+    background-color: #c52f2e !important; /* Color rojo Scolari */
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    box-shadow: 0 4px 6px rgba(197, 47, 46, 0.2) !important;
+    font-family: Arial, sans-serif !important;
+    display: block !important; /* Para asegurar que actúe como bloque */
+    text-align: center !important;
+    font-weight: bold !important;
+    border-radius: 6px !important;
+}
+
+.reserva-form .boton-reservar:hover {
+    background-color: #a02827 !important;
+    box-shadow: 0 5px 8px rgba(197, 47, 46, 0.3) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Estilo para las etiquetas del formulario */
+.reserva-form label {
+    display: block !important;
+    font-weight: 600 !important;
+    margin-bottom: 6px !important;
+    color: #333 !important;
+    font-size: 14px !important;
+    font-family: Arial, sans-serif !important;
+}
+
+/* Anular estilos existentes para botones de eliminar */
+.reserva-form .boton-eliminar {
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    background: #dc3232 !important;
+    color: #fff !important;
+    width: 25px !important;
+    height: 25px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: none !important;
+    cursor: pointer !important;
+    border-radius: 50% !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Estilos para ventanas modales de imágenes */
+.modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background-color: rgba(0,0,0,0.85) !important;
+    z-index: 999999 !important;
+    display: none;
+}
+
+.modal-overlay.active {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+.modal-content {
+    position: relative !important;
+    background-color: #fff !important;
+    padding: 20px !important;
+    border-radius: 8px !important;
+    max-width: 90% !important;
+    width: auto !important;
+    margin: auto !important;
+    text-align: center !important;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3) !important;
+}
+
+.modal-close {
+    position: absolute !important;
+    top: -15px !important;
+    right: -15px !important;
+    width: 32px !important;
+    height: 32px !important;
+    background: #c52f2e !important;
+    color: white !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    cursor: pointer !important;
+    font-size: 20px !important;
+    font-weight: bold !important;
+    z-index: 1000000 !important;
+    border: 2px solid white !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3) !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+}
+
+.modal-close:hover {
+    background: #a02827 !important;
+    transform: scale(1.1) !important;
+}
+
+.modal-image {
+    display: block !important;
+    max-width: 100% !important;
+    max-height: 80vh !important;
+    margin: 0 auto !important;
+    object-fit: contain !important;
+}
+
+/* Hacer que las imágenes sean clickeables */
+.linea-producto-imagen img, 
+.guia-botones button {
+    cursor: pointer !important;
+}
+
+/* Ocultar los contenedores de guía originales */
+.guia-contenedor {
+    display: none !important;
+}
+
+/* Agregar footer de créditos similar al del admin */
+.reserva-footer-credits {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    font-size: 13px;
+    color: #777;
+}
+
+.reserva-footer-credits a {
+    color: #0073aa;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.reserva-footer-credits a:hover {
+    color: #00a0d2;
+    text-decoration: underline;
+}

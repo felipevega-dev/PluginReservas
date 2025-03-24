@@ -1,0 +1,426 @@
+/* Estilos base para la página de detalle */
+.reserva-detail-page {
+    max-width: 1200px;
+    margin: 20px auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+/* Barra de acciones */
+.reserva-detail-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 10px;
+}
+.action-buttons-left, .action-buttons-right {
+    display: flex;
+    gap: 8px;
+}
+.action-buttons-left .button, .action-buttons-right .button {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.button-delete {
+    background-color: #dc3545 !important;
+    color: white !important;
+    border-color: #bd2130 !important;
+}
+.button-delete:hover {
+    background-color: #bd2130 !important;
+}
+
+/* Contenedor principal */
+.reserva-detail-container {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+/* Cabecera */
+.reserva-detail-header {
+    background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+.header-branding {
+    display: flex;
+    align-items: center;
+}
+.reserva-logo {
+    max-width: 100px;
+    height: auto;
+    border-radius: 8px;
+    background-color: white;
+    padding: 8px;
+}
+.header-info {
+    flex: 1;
+}
+.header-info h1 {
+    color: white;
+    margin: 0;
+    font-size: 22px;
+}
+.reservation-date {
+    margin: 5px 0 0;
+    opacity: 0.9;
+    font-size: 14px;
+}
+.header-status {
+    display: flex;
+    align-items: center;
+}
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+}
+.status-active {
+    background-color: #28a745;
+    color: white;
+}
+
+/* Contenido principal */
+.reserva-detail-content {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 25px;
+    gap: 25px;
+}
+.reserva-detail-column {
+    flex: 1;
+    min-width: 300px;
+}
+
+/* Secciones de detalle */
+.detail-section {
+    margin-bottom: 25px;
+}
+.detail-section:last-child {
+    margin-bottom: 0;
+}
+.detail-section h2 {
+    font-size: 18px;
+    color: #4b6cb7;
+    margin: 0 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.detail-section h2 .dashicons {
+    color: #4b6cb7;
+}
+.detail-card {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+}
+.detail-row {
+    display: flex;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 10px;
+}
+.detail-row:last-child {
+    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.detail-label {
+    flex: 0 0 35%;
+    font-weight: 600;
+    color: #495057;
+}
+.detail-value {
+    flex: 1;
+    color: #212529;
+}
+.detail-value a {
+    color: #0073aa;
+    text-decoration: none;
+}
+.detail-value a:hover {
+    text-decoration: underline;
+}
+.fecha-highlight {
+    font-weight: 600;
+    color: #0073aa;
+}
+
+/* Sección de productos */
+.productos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+.producto-card {
+    display: flex;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+}
+.producto-imagen {
+    width: 80px;
+    min-width: 80px;
+    background-color: white;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.producto-imagen img {
+    max-width: 100%;
+    height: auto;
+    max-height: 80px;
+    object-fit: contain;
+}
+.producto-detalles {
+    flex: 1;
+    padding: 12px;
+}
+.producto-detalles h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #4b6cb7;
+}
+.producto-specs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+.spec-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.spec-talla {
+    background-color: #e9ecef;
+    color: #495057;
+}
+.spec-cantidad {
+    background-color: #cce5ff;
+    color: #004085;
+}
+.producto-precio {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 13px;
+}
+.precio-unitario {
+    color: #6c757d;
+}
+.precio-subtotal {
+    font-weight: 600;
+    color: #0073aa;
+}
+
+/* Resumen de compra */
+.reserva-summary {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 20px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+}
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+.summary-item:last-child {
+    border-bottom: none;
+}
+.summary-discount {
+    color: #dc3545;
+}
+.summary-total {
+    font-weight: 700;
+    font-size: 18px;
+    color: #0073aa;
+    padding-top: 15px;
+}
+
+/* Pie de página */
+.reserva-detail-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: #6c757d;
+}
+.footer-info, .footer-id {
+    margin: 0;
+}
+.footer-credits {
+    font-size: 12px;
+    color: #6c757d;
+    text-align: center;
+}
+.footer-credits a {
+    color: #0073aa;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    transition: color 0.2s;
+}
+.footer-credits a:hover {
+    color: #005177;
+    text-decoration: underline;
+}
+.footer-credits .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+/* Estilos para información no disponible */
+.no-productos {
+    padding: 20px;
+    text-align: center;
+}
+.no-details-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 16px;
+    color: #6c757d;
+    margin-bottom: 20px;
+}
+.no-details-message .dashicons {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: #ffc107;
+}
+
+/* Estilos para impresión */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    .reserva-detail-page, .reserva-detail-page * {
+        visibility: visible;
+    }
+    .reserva-detail-page {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+    .reserva-detail-actions, #adminmenuwrap, #adminmenuback, #wpadminbar, #wpfooter {
+        display: none !important;
+    }
+    .reserva-detail-container {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    .detail-card, .producto-card, .reserva-summary {
+        box-shadow: none;
+        border: 1px solid #eee;
+    }
+}
+
+/* Responsive */
+@media only screen and (max-width: 782px) {
+    .reserva-detail-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .header-status {
+        align-self: flex-start;
+        margin-top: 10px;
+    }
+    .reserva-detail-actions {
+        flex-direction: column;
+    }
+    .action-buttons-right {
+        margin-top: 10px;
+        align-self: flex-end;
+    }
+    .detail-row {
+        flex-direction: column;
+    }
+    .detail-label {
+        margin-bottom: 5px;
+    }
+    .productos-grid {
+        grid-template-columns: 1fr;
+    }
+    .reserva-detail-footer {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+}
+
+.origen-badge {
+    display: inline-block;
+    background-color: #ffeeba;
+    color: #856404;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-left: 10px;
+    font-weight: normal;
+}
+
+/* Estilos para badges de origen de tabla */
+.source-badge {
+    display: inline-block;
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+.source-badge.old {
+    background-color: #ffeb3b;
+    color: #333;
+}
+
+.source-badge.new {
+    background-color: #4caf50;
+    color: white;
+}
+
+/* Estilos para productos en vista detalle (adicionales) */
+.reserva-productos {
+    margin-top: 20px;
+}
+
+.producto-info h4 {
+    font-size: 16px;
+    color: #4b6cb7;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.producto-info p {
+    margin: 5px 0;
+    font-size: 14px;
+} 
