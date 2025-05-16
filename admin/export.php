@@ -121,12 +121,17 @@ function export_product_summary_csv($reservas) {
     // Separador para Excel
     fputcsv($output, array("sep=,"));
     
+    // Titulo del informe
+    fputcsv($output, array("RESUMEN DE PRODUCTOS POR TALLA"));
+    fputcsv($output, array("Fecha del informe: " . date('d/m/Y')));
+    fputcsv($output, array("")); // Línea en blanco
+    
     // Cabeceras del resumen
     fputcsv($output, array(
         'Producto',
         'Talla',
-        'Cantidad Total',
-        'Precio Unitario Promedio',
+        'Cantidad',
+        'Precio Unitario',
         'Monto Total',
     ));
     
@@ -222,10 +227,7 @@ function export_product_summary_csv($reservas) {
         }
     }
     
-    fputcsv($output, array(''));
-    fputcsv($output, array('RESUMEN GENERAL', '', '', ''));
-    fputcsv($output, array('Total Unidades Vendidas', $total_global_cantidad, '', ''));
-    fputcsv($output, array('Monto Total Recaudado', '$' . number_format($total_global_monto, 0, ',', '.'), '', ''));
+    fputcsv($output, array('TOTAL GENERAL', '', $total_global_cantidad, '', '$' . number_format($total_global_monto, 0, ',', '.')));
     
     fclose($output);
 }
@@ -262,14 +264,15 @@ function export_detailed_reservations_csv($reservas) {
     // Primera sección: Resumen por productos y tallas
     // Encabezado para la sección de productos
     fputcsv($output, array("RESUMEN DE PRODUCTOS POR TALLA"));
+    fputcsv($output, array("Fecha del informe: " . date('d/m/Y')));
     fputcsv($output, array(""));
     
     // Cabeceras del resumen de productos
     fputcsv($output, array(
         'Producto',
         'Talla',
-        'Cantidad Total',
-        'Precio Unitario Promedio',
+        'Cantidad',
+        'Precio Unitario',
         'Monto Total',
     ));
     
@@ -420,6 +423,10 @@ function export_detailed_reservations_csv($reservas) {
         ));
     }
     
+    // Pie de página
+    fputcsv($output, array(''));
+    fputcsv($output, array('Informe generado el ' . date('d/m/Y') . ' a las ' . date('H:i:s')));
+    
     fclose($output);
 }
 
@@ -483,19 +490,48 @@ function enhanced_excel_export($reservas, $export_type) {
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         
+        // Colores corporativos para el informe
+        $colorPrimario = '4b6cb7'; // Azul principal
+        $colorSecundario = '182848'; // Azul oscuro
+        $colorFondo = 'e8f0ff'; // Azul claro para fondos
+        $colorResaltado = '36b9cc'; // Color para resaltar datos
+        
         // Estilos comunes
         $titleStyle = [
             'font' => [
                 'bold' => true,
-                'size' => 16,
-                'color' => ['rgb' => '4b6cb7'],
+                'size' => 18,
+                'color' => ['rgb' => 'FFFFFF'],
             ],
             'alignment' => [
                 'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
             ],
             'fill' => [
                 'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                'color' => ['rgb' => 'e8f0ff'],
+                'color' => ['rgb' => $colorPrimario],
+            ],
+            'borders' => [
+                'bottom' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM,
+                    'color' => ['rgb' => $colorSecundario],
+                ],
+            ],
+        ];
+        
+        $subtitleStyle = [
+            'font' => [
+                'bold' => true,
+                'size' => 12,
+                'color' => ['rgb' => $colorSecundario],
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'color' => ['rgb' => $colorFondo],
             ],
         ];
         
@@ -503,17 +539,24 @@ function enhanced_excel_export($reservas, $export_type) {
             'font' => [
                 'bold' => true,
                 'color' => ['rgb' => 'FFFFFF'],
+                'size' => 11,
             ],
             'alignment' => [
                 'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
             ],
             'fill' => [
                 'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                'color' => ['rgb' => '4b6cb7'],
+                'color' => ['rgb' => $colorPrimario],
             ],
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['rgb' => 'CCCCCC'],
+                ],
+                'outline' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM,
+                    'color' => ['rgb' => $colorSecundario],
                 ],
             ],
         ];
@@ -521,10 +564,25 @@ function enhanced_excel_export($reservas, $export_type) {
         $totalRowStyle = [
             'font' => [
                 'bold' => true,
+                'size' => 11,
+                'color' => ['rgb' => $colorSecundario],
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT,
             ],
             'fill' => [
                 'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                'color' => ['rgb' => 'e8f0ff'],
+                'color' => ['rgb' => $colorFondo],
+            ],
+            'borders' => [
+                'outline' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM,
+                    'color' => ['rgb' => $colorSecundario],
+                ],
+                'top' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['rgb' => $colorSecundario],
+                ],
             ],
         ];
         
@@ -532,27 +590,42 @@ function enhanced_excel_export($reservas, $export_type) {
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['rgb' => 'CCCCCC'],
                 ],
+            ],
+            'alignment' => [
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
             ],
         ];
         
-        $currencyFormat = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
+        $alternatingRowStyle = [
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'color' => ['rgb' => 'F8F9FA'],
+            ],
+        ];
         
-        // Configurar columnas
-        $sheet->getColumnDimension('A')->setWidth(30);
+        $currencyFormat = '_($* #,##0_);[Red]_($* (#,##0);_($* "-"_);_(@_)';
+        $quantityFormat = '#,##0';
+        
+        // Configurar columnas para la sección de productos
+        $sheet->getColumnDimension('A')->setWidth(35);
         $sheet->getColumnDimension('B')->setWidth(15);
-        $sheet->getColumnDimension('C')->setWidth(15);
+        $sheet->getColumnDimension('C')->setWidth(18);
         $sheet->getColumnDimension('D')->setWidth(20);
         $sheet->getColumnDimension('E')->setWidth(20);
         
-        // Título del informe
-        $sheet->setCellValue('A1', ($export_type === 'summary' ? 'RESUMEN DE PRODUCTOS POR TALLA' : 'REPORTE DETALLADO DE RESERVAS'));
+        // Título del informe y ajustar altura
+        $sheet->setCellValue('A1', mb_strtoupper($export_type === 'summary' ? 'Resumen de Productos por Talla' : 'Reporte Detallado de Reservas'));
         $sheet->mergeCells('A1:E1');
         $sheet->getStyle('A1:E1')->applyFromArray($titleStyle);
+        $sheet->getRowDimension('1')->setRowHeight(30);
         
         // Fecha del informe
         $sheet->setCellValue('A2', 'Fecha del informe: ' . date('d/m/Y'));
         $sheet->mergeCells('A2:E2');
+        $sheet->getStyle('A2:E2')->applyFromArray($subtitleStyle);
+        $sheet->getRowDimension('2')->setRowHeight(20);
         
         // Estructura para productos
         $productos_data = array(
@@ -600,14 +673,16 @@ function enhanced_excel_export($reservas, $export_type) {
         $sheet->setCellValue('A' . $currentRow, 'Producto');
         $sheet->setCellValue('B' . $currentRow, 'Talla');
         $sheet->setCellValue('C' . $currentRow, 'Cantidad');
-        $sheet->setCellValue('D' . $currentRow, 'Precio Promedio');
+        $sheet->setCellValue('D' . $currentRow, 'Precio Unitario');
         $sheet->setCellValue('E' . $currentRow, 'Monto Total');
         $sheet->getStyle('A' . $currentRow . ':E' . $currentRow)->applyFromArray($headerStyle);
+        $sheet->getRowDimension($currentRow)->setRowHeight(22);
         $currentRow++;
         
         // Escribir los datos resumidos de productos
         $total_global_cantidad = 0;
         $total_global_monto = 0;
+        $producto_idx = 0;
         
         foreach ($productos_data as $producto => $tallas) {
             $producto_total_cantidad = 0;
@@ -624,11 +699,24 @@ function enhanced_excel_export($reservas, $export_type) {
             $total_global_cantidad += $producto_total_cantidad;
             $total_global_monto += $producto_total_monto;
             
+            // Color para alternar productos
+            $productoColor = ($producto_idx % 2 == 0) ? 'EDF2FF' : 'E5EDFF';
+            
             // Detalle por tallas
+            $rowIndex = 0;
             foreach ($tallas_orden as $talla) {
                 if (isset($tallas[$talla]) && $tallas[$talla]['cantidad'] > 0) {
                     $precio_unitario_promedio = $tallas[$talla]['cantidad'] > 0 ? 
                         $tallas[$talla]['total'] / $tallas[$talla]['cantidad'] : 0;
+                    
+                    // Color de fondo para fila de producto
+                    $filaStyle = [
+                        'fill' => [
+                            'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                            'color' => ['rgb' => ($rowIndex % 2 == 0) ? 'FFFFFF' : 'F8F9FA'],
+                        ],
+                    ];
+                    $sheet->getStyle('A' . $currentRow . ':E' . $currentRow)->applyFromArray($filaStyle);
                     
                     $sheet->setCellValue('A' . $currentRow, ($currentRow == $first_row) ? $producto : '');
                     $sheet->setCellValue('B' . $currentRow, $talla);
@@ -636,18 +724,23 @@ function enhanced_excel_export($reservas, $export_type) {
                     $sheet->setCellValue('D' . $currentRow, $precio_unitario_promedio);
                     $sheet->setCellValue('E' . $currentRow, $tallas[$talla]['total']);
                     
-                    // Formato para moneda
+                    // Formatos numéricos
+                    $sheet->getStyle('C' . $currentRow)->getNumberFormat()->setFormatCode($quantityFormat);
                     $sheet->getStyle('D' . $currentRow)->getNumberFormat()->setFormatCode($currencyFormat);
                     $sheet->getStyle('E' . $currentRow)->getNumberFormat()->setFormatCode($currencyFormat);
                     
+                    // Centramos algunas columnas
+                    $sheet->getStyle('B' . $currentRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    $sheet->getStyle('C' . $currentRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    
                     $currentRow++;
+                    $rowIndex++;
                 }
             }
             
             // Fila total del producto
-            $sheet->setCellValue('A' . $currentRow, $producto . ' - TOTAL');
-            $sheet->setCellValue('B' . $currentRow, '');
-            $sheet->setCellValue('C' . $currentRow, $producto_total_cantidad);
+            $sheet->setCellValue('A' . $currentRow, 'TOTAL ' . $producto);
+            $sheet->mergeCells('A' . $currentRow . ':C' . $currentRow);
             $sheet->setCellValue('D' . $currentRow, $producto_total_cantidad > 0 ? $producto_total_monto / $producto_total_cantidad : 0);
             $sheet->setCellValue('E' . $currentRow, $producto_total_monto);
             
@@ -657,19 +750,42 @@ function enhanced_excel_export($reservas, $export_type) {
             $sheet->getStyle('E' . $currentRow)->getNumberFormat()->setFormatCode($currencyFormat);
             
             $currentRow += 2; // Agregar espacio entre productos
+            $producto_idx++;
         }
         
-        // Total general
+        // Total general - con estilo destacado
         $sheet->setCellValue('A' . $currentRow, 'TOTAL GENERAL');
-        $sheet->setCellValue('B' . $currentRow, '');
-        $sheet->setCellValue('C' . $currentRow, $total_global_cantidad);
-        $sheet->setCellValue('D' . $currentRow, '');
+        $sheet->mergeCells('A' . $currentRow . ':C' . $currentRow);
+        $sheet->getStyle('A' . $currentRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->setCellValue('D' . $currentRow, $total_global_cantidad);
         $sheet->setCellValue('E' . $currentRow, $total_global_monto);
         
-        // Aplicar estilo al total general
-        $sheet->getStyle('A' . $currentRow . ':E' . $currentRow)->applyFromArray($totalRowStyle);
-        $sheet->getStyle('A' . $currentRow . ':E' . $currentRow)->getFont()->setSize(14); // Texto más grande
+        // Estilo destacado para el total general
+        $totalGeneralStyle = [
+            'font' => [
+                'bold' => true,
+                'size' => 12,
+                'color' => ['rgb' => 'FFFFFF'],
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'color' => ['rgb' => $colorSecundario],
+            ],
+            'borders' => [
+                'outline' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM,
+                    'color' => ['rgb' => $colorPrimario],
+                ],
+            ],
+        ];
+        
+        $sheet->getStyle('A' . $currentRow . ':E' . $currentRow)->applyFromArray($totalGeneralStyle);
+        $sheet->getStyle('D' . $currentRow)->getNumberFormat()->setFormatCode($quantityFormat);
         $sheet->getStyle('E' . $currentRow)->getNumberFormat()->setFormatCode($currencyFormat);
+        $sheet->getRowDimension($currentRow)->setRowHeight(24);
         
         // Si es reporte detallado, agregar sección de clientes
         if ($export_type === 'detailed') {
@@ -679,6 +795,7 @@ function enhanced_excel_export($reservas, $export_type) {
             $sheet->setCellValue('A' . $currentRow, 'DETALLE DE CLIENTES Y RESERVAS');
             $sheet->mergeCells('A' . $currentRow . ':K' . $currentRow);
             $sheet->getStyle('A' . $currentRow . ':K' . $currentRow)->applyFromArray($titleStyle);
+            $sheet->getRowDimension($currentRow)->setRowHeight(30);
             $currentRow += 2;
             
             // Cabeceras para clientes
@@ -694,25 +811,32 @@ function enhanced_excel_export($reservas, $export_type) {
             $sheet->setCellValue('J' . $currentRow, 'Productos');
             $sheet->setCellValue('K' . $currentRow, 'Observaciones');
             
-            // Ajustar ancho de columnas
+            // Ajustar ancho de columnas para sección de clientes
             $sheet->getColumnDimension('A')->setWidth(8);
             $sheet->getColumnDimension('B')->setWidth(25);
             $sheet->getColumnDimension('C')->setWidth(25);
             $sheet->getColumnDimension('D')->setWidth(15);
-            $sheet->getColumnDimension('E')->setWidth(25);
+            $sheet->getColumnDimension('E')->setWidth(30);
             $sheet->getColumnDimension('F')->setWidth(15);
             $sheet->getColumnDimension('G')->setWidth(15);
             $sheet->getColumnDimension('H')->setWidth(15);
             $sheet->getColumnDimension('I')->setWidth(15);
-            $sheet->getColumnDimension('J')->setWidth(40);
+            $sheet->getColumnDimension('J')->setWidth(50);
             $sheet->getColumnDimension('K')->setWidth(30);
             
             $sheet->getStyle('A' . $currentRow . ':K' . $currentRow)->applyFromArray($headerStyle);
+            $sheet->getRowDimension($currentRow)->setRowHeight(22);
             $currentRow++;
             
             // Datos de clientes
             $firstClientRow = $currentRow;
+            $clientIdx = 0;
+            
             foreach ($reservas as $reserva) {
+                // Alternar colores de filas
+                $rowStyle = ($clientIdx % 2 == 0) ? [] : $alternatingRowStyle;
+                $sheet->getStyle('A' . $currentRow . ':K' . $currentRow)->applyFromArray($rowStyle);
+                
                 // Formatear productos para mejor legibilidad
                 $productos_formateados = '';
                 $detalles_productos = json_decode($reserva['productos'], true);
@@ -740,21 +864,55 @@ function enhanced_excel_export($reservas, $export_type) {
                 $sheet->setCellValue('J' . $currentRow, $productos_formateados);
                 $sheet->setCellValue('K' . $currentRow, isset($reserva['observaciones']) ? $reserva['observaciones'] : '');
                 
+                // Alineaciones y formatos
+                $sheet->getStyle('A' . $currentRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle('D' . $currentRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle('G' . $currentRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle('I' . $currentRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                
                 // Formato para moneda
                 $sheet->getStyle('H' . $currentRow)->getNumberFormat()->setFormatCode($currencyFormat);
                 
                 $currentRow++;
+                $clientIdx++;
             }
             
             // Aplicar estilos a la tabla de clientes
             $sheet->getStyle('A' . $firstClientRow . ':K' . ($currentRow - 1))->applyFromArray($dataStyle);
             
-            // Auto ajustar filas
-            $sheet->getRowDimension('J')->setRowHeight(-1);
+            // Ajustar altura de filas automáticamente
+            for ($row = $firstClientRow; $row < $currentRow; $row++) {
+                $sheet->getRowDimension($row)->setRowHeight(-1);
+            }
+            
+            // Autofilter para la tabla de clientes
+            $sheet->setAutoFilter('A' . ($firstClientRow - 1) . ':K' . ($currentRow - 1));
         }
+        
+        // Agregar pie de página con información
+        $currentRow += 2;
+        $sheet->setCellValue('A' . $currentRow, 'Informe generado el ' . date('d/m/Y') . ' a las ' . date('H:i:s'));
+        $sheet->mergeCells('A' . $currentRow . ':K' . $currentRow);
+        $sheet->getStyle('A' . $currentRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+        $sheet->getStyle('A' . $currentRow)->getFont()->setItalic(true);
+        $sheet->getStyle('A' . $currentRow)->getFont()->setSize(8);
+        $sheet->getStyle('A' . $currentRow)->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_DARKBLUE));
+        
+        // Seguridad y propiedades del documento
+        $spreadsheet->getProperties()
+            ->setCreator('Plugin Reserva Form')
+            ->setLastModifiedBy('Plugin Reserva Form')
+            ->setTitle('Reporte de Reservas')
+            ->setSubject('Informe de Reservas de Uniformes')
+            ->setDescription('Generado automáticamente desde el plugin Reserva Form')
+            ->setKeywords('reservas uniformes excel')
+            ->setCategory('Reportes');
         
         // Configurar primera hoja
         $sheet->setTitle('Reporte de Reservas');
+        
+        // Proteger la hoja (solo lectura)
+        $sheet->getProtection()->setSheet(true);
         
         // Crear el archivo Excel
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
