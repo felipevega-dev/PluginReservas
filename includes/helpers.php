@@ -83,4 +83,56 @@ function get_formatted_productos($productos_json, $reserva_id = null, $table_ori
     
     // Si no hay datos de productos
     return '<span class="no-disponible">Información no disponible</span>';
+}
+
+/**
+ * Verifica si PhpSpreadsheet está disponible
+ *
+ * @param bool $check_dir También verifica si el directorio de libs existe
+ * @return array|bool True si está disponible, o array con información si $check_dir es true
+ */
+function reserva_check_phpspreadsheet($check_dir = false) {
+    $available = class_exists('PhpOffice\PhpSpreadsheet\Spreadsheet');
+    
+    if (!$available) {
+        // Intentar cargar la librería automáticamente si no está disponible
+        $plugin_dir = plugin_dir_path(dirname(__FILE__));
+        $posibles_rutas = array(
+            $plugin_dir . 'includes/libs/autoload.php',
+            $plugin_dir . 'includes/libs/vendor/autoload.php',
+            $plugin_dir . 'includes/libs/PhpSpreadsheet/bootstrap.php',
+        );
+        
+        foreach ($posibles_rutas as $ruta) {
+            if (file_exists($ruta)) {
+                try {
+                    require_once $ruta;
+                    $available = class_exists('PhpOffice\PhpSpreadsheet\Spreadsheet');
+                    if ($available) {
+                        break;
+                    }
+                } catch (Exception $e) {
+                    continue;
+                }
+            }
+        }
+    }
+    
+    if (!$check_dir) {
+        return $available;
+    }
+    
+    // Comprobar si el directorio de libs existe
+    $plugin_dir = plugin_dir_path(dirname(__FILE__));
+    $libs_dir = $plugin_dir . 'includes/libs';
+    $vendor_dir_exists = is_dir($libs_dir);
+    $composer_json_exists = file_exists($plugin_dir . 'composer.json');
+    
+    return array(
+        'available' => $available,
+        'vendor_dir_exists' => $vendor_dir_exists,
+        'composer_json_exists' => $composer_json_exists,
+        'libs_dir' => $libs_dir,
+        'plugin_dir' => $plugin_dir
+    );
 } 

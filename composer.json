@@ -1,0 +1,12 @@
+{
+    "name": "scolari/reserva-form",
+    "description": "Plugin de WordPress para gestionar reservas de uniformes escolares",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0+",
+    "require": {
+        "phpoffice/phpspreadsheet": "^1.29"
+    },
+    "config": {
+        "vendor-dir": "includes/libs"
+    }
+} 

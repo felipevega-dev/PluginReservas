@@ -68,9 +68,23 @@ $comunas = $this->get_comunas();
             <a href="<?php echo esc_url(admin_url('admin.php?page=reservas')); ?>" class="button">
                 <span class="dashicons dashicons-dashboard"></span> Dashboard
             </a>
-            <a href="<?php echo esc_url(admin_url('admin.php?page=reserva-lista&export=1')); ?>" class="button button-secondary">
-                <span class="dashicons dashicons-media-spreadsheet"></span> Exportar a CSV
-            </a>
+            <div class="export-dropdown">
+                <button class="button button-secondary export-button">
+                    <span class="dashicons dashicons-media-spreadsheet"></span> Exportar <span class="dashicons dashicons-arrow-down-alt2"></span>
+                </button>
+                <div class="export-dropdown-content">
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=reserva-lista&export=1&export_type=detailed')); ?>">
+                        <span class="dashicons dashicons-list-view"></span> Reservas detalladas (CSV)
+                    </a>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=reserva-lista&export=1&export_type=summary')); ?>">
+                        <span class="dashicons dashicons-chart-bar"></span> Resumen por tallas (CSV)
+                    </a>
+                    <div class="export-divider"></div>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=reserva-lista&export=1&export_type=detailed&format=excel')); ?>">
+                        <span class="dashicons dashicons-media-spreadsheet"></span> Reporte completo (Excel)
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
     

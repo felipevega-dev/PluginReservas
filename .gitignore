@@ -49,3 +49,4 @@ coverage/
 
 # No subir carpeta .cursor
 .cursor
+.cursor/

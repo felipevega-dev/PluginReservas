@@ -878,7 +878,7 @@ function reserva_ajax_get_product_size_details() {
     $table_name = $wpdb->prefix . 'reservas';
     
     // Obtener todas las reservas con detalles de productos
-    $reservas = $wpdb->get_results("SELECT product_details FROM $table_name WHERE product_details IS NOT NULL");
+    $reservas = $wpdb->get_results("SELECT productos FROM $table_name WHERE productos IS NOT NULL");
     
     // Estructura para almacenar conteo de tallas y valores
     $tallas = array(
@@ -898,15 +898,15 @@ function reserva_ajax_get_product_size_details() {
     $total_general = 0;
     
     foreach ($reservas as $reserva) {
-        $detalles = json_decode($reserva->product_details, true);
+        $detalles = json_decode($reserva->productos, true);
         
         if (is_array($detalles)) {
             foreach ($detalles as $detalle) {
                 $producto_nombre = $detalle['producto'];
                 $talla = $detalle['talla'];
                 $cantidad = intval($detalle['cantidad']);
-                $precio_unitario = isset($detalle['unitPrice']) ? floatval($detalle['unitPrice']) : 0;
-                $subtotal = $cantidad * $precio_unitario;
+                $precio_unitario = isset($detalle['precio']) ? floatval($detalle['precio']) : 0;
+                $subtotal = isset($detalle['subtotal']) ? floatval($detalle['subtotal']) : ($cantidad * $precio_unitario);
                 
                 // Determinar si este producto coincide con el solicitado
                 $producto_slug = '';

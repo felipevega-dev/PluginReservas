@@ -2,7 +2,7 @@
 /*
 Plugin Name: Formulario de reserva
 Description: Plugin para gestionar reservas de uniformes escolares (Scolari).
-Version: 2.9.9
+Version: 3.0.1
 Author: Felipe Vega
 Text Domain: reserva-form
 */
@@ -17,11 +17,13 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/database/install.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/shortcodes.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/process.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/data/productos-manager.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/helpers.php';
 
 if ( is_admin() ) {
     require_once plugin_dir_path( __FILE__ ) . 'admin/admin-menu.php';
     require_once plugin_dir_path( __FILE__ ) . 'admin/reserva-lista.php';
     require_once plugin_dir_path( __FILE__ ) . 'admin/products-admin.php';
+    require_once plugin_dir_path( __FILE__ ) . 'admin/export.php';
 }
 
 // Registrar el hook de activación utilizando el archivo principal

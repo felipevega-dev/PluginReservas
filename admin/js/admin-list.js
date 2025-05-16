@@ -42,4 +42,52 @@ jQuery(document).ready(function($) {
             $(this).css("border-color", "#0073aa");
         }
     });
+    
+    // Manejo del menú desplegable de exportación
+    $(".export-button").on("click", function(e) {
+        e.preventDefault();
+        $(".export-dropdown-content").toggle();
+    });
+    
+    // Cerrar el menú de exportación cuando se hace clic fuera de él
+    $(document).on("click", function(e) {
+        if (!$(e.target).closest(".export-dropdown").length) {
+            $(".export-dropdown-content").hide();
+        }
+    });
+    
+    // Aplicar los filtros actuales a los enlaces de exportación
+    function updateExportLinks() {
+        // Obtener todos los parámetros de filtro de la URL actual
+        var currentUrl = new URL(window.location.href);
+        var params = new URLSearchParams(currentUrl.search);
+        
+        // Quitar parámetros relacionados con la exportación
+        params.delete('export');
+        params.delete('export_type');
+        
+        // Convertir los parámetros a una cadena de consulta
+        var queryString = params.toString();
+        
+        // Actualizar cada enlace de exportación con los filtros actuales
+        $(".export-dropdown-content a").each(function() {
+            var baseUrl = $(this).attr('href').split('?')[0];
+            var exportParams = new URLSearchParams($(this).attr('href').split('?')[1]);
+            
+            // Preservar parámetros de exportación
+            var exportType = exportParams.get('export_type');
+            
+            // Crear nuevo enlace con filtros actuales
+            var newHref = baseUrl + '?' + queryString;
+            if (queryString) {
+                newHref += '&';
+            }
+            newHref += 'export=1&export_type=' + exportType;
+            
+            $(this).attr('href', newHref);
+        });
+    }
+    
+    // Actualizar enlaces al cargar la página
+    updateExportLinks();
 }); 

@@ -83,6 +83,7 @@ function reserva_admin_register_assets() {
     if ($screen && strpos($screen->id, 'page_reserva-lista') !== false) {
         if (isset($_GET['action']) && $_GET['action'] === 'edit') {
             wp_enqueue_style('reserva-admin-detail-css');
+            wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', array(), '3.7.0', true);
             wp_enqueue_script('reserva-admin-detail-js');
         } else {
             wp_enqueue_style('reserva-admin-list-css');
