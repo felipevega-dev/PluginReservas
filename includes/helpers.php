@@ -14,10 +14,11 @@ if (!defined('ABSPATH')) {
  * Formatea la fecha en español abreviado
  *
  * @param string $fecha_db Fecha en formato de base de datos
+ * @param bool $html_format Si es verdadero, retorna la fecha con formato HTML
  * @return string Fecha formateada
  */
-function format_fecha($fecha_db) {
-    if (empty($fecha_db)) return '-';
+function format_fecha($fecha_db, $html_format = true) {
+    if (empty($fecha_db)) return $html_format ? '-' : '';
     
     $timestamp = strtotime($fecha_db);
     $meses = array('Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic');
@@ -26,17 +27,22 @@ function format_fecha($fecha_db) {
     $mes = $meses[date('n', $timestamp) - 1];
     $año = date('Y', $timestamp);
     
-    return '<span class="fecha-formateada">' . $dia . ' ' . $mes . ' ' . $año . '</span>';
+    if ($html_format) {
+        return '<span class="fecha-formateada">' . $dia . ' ' . $mes . ' ' . $año . '</span>';
+    } else {
+        return $dia . ' ' . $mes . ' ' . $año;
+    }
 }
 
 /**
  * Formatea la fecha en español completo
  *
  * @param string $fecha_db Fecha en formato de base de datos
+ * @param bool $html_format Si es verdadero, aplica formato HTML
  * @return string Fecha formateada
  */
-function format_fecha_completa($fecha_db) {
-    if (empty($fecha_db)) return 'No especificada';
+function format_fecha_completa($fecha_db, $html_format = true) {
+    if (empty($fecha_db)) return $html_format ? 'No especificada' : '';
     
     $timestamp = strtotime($fecha_db);
     $meses_completos = array(

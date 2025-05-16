@@ -19,6 +19,11 @@ function reserva_export_csv() {
         ob_end_clean();
     }
     
+    // Establecer codificación UTF-8 para todo el proceso
+    if (function_exists('mb_internal_encoding')) {
+        mb_internal_encoding('UTF-8');
+    }
+    
     global $wpdb;
     $table_name = $wpdb->prefix . 'reservas';
     
@@ -73,17 +78,25 @@ function reserva_export_csv() {
     $export_type = isset($_GET['export_type']) ? sanitize_text_field($_GET['export_type']) : 'detailed';
     $format = isset($_GET['format']) ? sanitize_text_field($_GET['format']) : 'csv';
     
+    // Log para depuración (opcional)
+    error_log('Exportando reservas en formato: ' . $format . ', tipo: ' . $export_type);
+    
     // Verificar si se requiere formato Excel avanzado
     if ($format === 'excel') {
-        if (!class_exists('PhpOffice\PhpSpreadsheet\Spreadsheet')) {
+        // Comprobar si PhpSpreadsheet está disponible
+        $phpspreadsheet_info = reserva_check_phpspreadsheet(true);
+        
+        if ($phpspreadsheet_info['available']) {
+            error_log('PhpSpreadsheet está disponible, usando formato Excel avanzado');
+            enhanced_excel_export($reservas, $export_type);
+        } else {
+            error_log('PhpSpreadsheet no está disponible, revirtiendo a CSV: ' . print_r($phpspreadsheet_info, true));
             // Revertir a formato CSV si la librería no está disponible
             if ($export_type === 'summary') {
                 export_product_summary_csv($reservas);
             } else {
                 export_detailed_reservations_csv($reservas);
             }
-        } else {
-            enhanced_excel_export($reservas, $export_type);
         }
     } else {
         // Formato CSV estándar
@@ -107,16 +120,27 @@ function export_product_summary_csv($reservas) {
     // Prevenir caché
     nocache_headers();
     
+    // Limpiar cualquier búfer de salida
+    if (ob_get_level()) {
+        ob_end_clean();
+    }
+    
+    // Establecer la codificación interna
+    if (function_exists('mb_internal_encoding')) {
+        mb_internal_encoding('UTF-8');
+    }
+    
     // Preparar el archivo CSV
-    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Type: text/csv; charset=UTF-8');
     header('Content-Disposition: attachment; filename="' . $filename . '"');
     header('Pragma: no-cache');
     header('Expires: 0');
     
+    // Abrir archivo de salida
     $output = fopen('php://output', 'w');
     
-    // BOM para UTF-8
-    fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+    // BOM para UTF-8 - Esto es crítico para Excel y caracteres especiales
+    fwrite($output, "\xEF\xBB\xBF");
     
     // Separador para Excel
     fputcsv($output, array("sep=,"));
@@ -230,6 +254,7 @@ function export_product_summary_csv($reservas) {
     fputcsv($output, array('TOTAL GENERAL', '', $total_global_cantidad, '', '$' . number_format($total_global_monto, 0, ',', '.')));
     
     fclose($output);
+    exit;
 }
 
 /**
@@ -247,16 +272,21 @@ function export_detailed_reservations_csv($reservas) {
         ob_end_clean();
     }
     
+    // Establecer la codificación interna
+    if (function_exists('mb_internal_encoding')) {
+        mb_internal_encoding('UTF-8');
+    }
+    
     // Preparar el archivo CSV
-    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Type: text/csv; charset=UTF-8');
     header('Content-Disposition: attachment; filename="' . $filename . '"');
     header('Pragma: no-cache');
     header('Expires: 0');
     
     $output = fopen('php://output', 'w');
     
-    // BOM para UTF-8
-    fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+    // BOM para UTF-8 - Esto es crítico para Excel y caracteres especiales
+    fwrite($output, "\xEF\xBB\xBF");
     
     // Separador para Excel
     fputcsv($output, array("sep=,"));
@@ -399,10 +429,14 @@ function export_detailed_reservations_csv($reservas) {
         
         if (is_array($detalles_productos)) {
             foreach ($detalles_productos as $index => $detalle) {
+                // Convertir explícitamente a UTF-8
+                $producto_nombre = html_entity_decode($detalle['producto'], ENT_QUOTES, 'UTF-8');
+                $talla_nombre = html_entity_decode($detalle['talla'], ENT_QUOTES, 'UTF-8');
+                
                 if ($index > 0) {
                     $productos_formateados .= " | ";
                 }
-                $productos_formateados .= $detalle['producto'] . " - Talla: " . $detalle['talla'] . " - Cant: " . $detalle['cantidad'];
+                $productos_formateados .= $producto_nombre . " - Talla: " . $talla_nombre . " - Cant: " . $detalle['cantidad'];
             }
         } else {
             $productos_formateados = $reserva['productos'];
@@ -415,9 +449,9 @@ function export_detailed_reservations_csv($reservas) {
             $reserva['telefono'],
             $reserva['direccion'],
             $reserva['comuna'],
-            formato_fecha($reserva['fecha']),
+            export_format_fecha($reserva['fecha'], false),
             '$' . number_format($reserva['total'], 0, ',', '.'),
-            formato_fecha($reserva['fecha_registro']),
+            export_format_fecha($reserva['fecha_registro'], false),
             $productos_formateados,
             isset($reserva['observaciones']) ? $reserva['observaciones'] : ''
         ));
@@ -428,16 +462,25 @@ function export_detailed_reservations_csv($reservas) {
     fputcsv($output, array('Informe generado el ' . date('d/m/Y') . ' a las ' . date('H:i:s')));
     
     fclose($output);
+    exit;
 }
 
 /**
- * Formatea fecha para CSV
+ * Formatea fecha para CSV (implementación interna)
  */
-function formato_fecha($fecha_str) {
+function export_format_fecha($fecha_str, $html_format = true) {
+    // Verificar si la función original está disponible
+    if (function_exists('format_fecha') && $fecha_str != format_fecha($fecha_str, false)) {
+        // Usar la implementación de helpers.php que maneja meses en español
+        return format_fecha($fecha_str, false);
+    }
+    
     if (empty($fecha_str)) return '';
     
-    $fecha = strtotime($fecha_str);
-    return date('d/m/Y', $fecha);
+    $timestamp = strtotime($fecha_str);
+    
+    // Formatear con el patrón d/m/Y para asegurar consistencia
+    return date('d/m/Y', $timestamp);
 }
 
 /**
@@ -447,6 +490,11 @@ function enhanced_excel_export($reservas, $export_type) {
     // Asegurarse de que no haya salida antes de enviar los encabezados
     if (ob_get_level()) {
         ob_end_clean();
+    }
+    
+    // Establecer codificación interna en UTF-8 para manejar correctamente caracteres especiales
+    if (function_exists('mb_internal_encoding')) {
+        mb_internal_encoding('UTF-8');
     }
     
     // Verificar si la librería PhpSpreadsheet está disponible
@@ -488,7 +536,21 @@ function enhanced_excel_export($reservas, $export_type) {
     try {
         // Iniciar PhpSpreadsheet
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        
+        // Configuración específica para UTF-8
+        // \PhpOffice\PhpSpreadsheet\Settings::setLocale('es'); // Temporarily comment out
+        
+        // Configurar codificación a UTF-8 para PhpSpreadsheet
+        $spreadsheet->getProperties()
+            // ->setCodepage(65001) // Código para UTF-8 // Temporarily comment out
+            ->setCreator('Reserva Form Plugin')
+            ->setTitle('Informe de Reservas')
+            ->setDescription('Generado con caracteres UTF-8')
+            ->setLastModifiedBy('Reserva Form Plugin')
+            ->setCategory('Informes');
+            
         $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setCellValue('A1', 'Prueba con Ñandú y Pingüino áéíóú'); // Test string
         
         // Colores corporativos para el informe
         $colorPrimario = '4b6cb7'; // Azul principal
@@ -616,7 +678,13 @@ function enhanced_excel_export($reservas, $export_type) {
         $sheet->getColumnDimension('E')->setWidth(20);
         
         // Título del informe y ajustar altura
-        $sheet->setCellValue('A1', mb_strtoupper($export_type === 'summary' ? 'Resumen de Productos por Talla' : 'Reporte Detallado de Reservas'));
+        // Usar mb_strtoupper para convertir a mayúsculas respetando caracteres especiales
+        $titulo = $export_type === 'summary' ? 'Resumen de Productos por Talla' : 'Reporte Detallado de Reservas';
+        if (function_exists('mb_strtoupper')) {
+            $titulo = mb_strtoupper($titulo, 'UTF-8');
+        }
+        
+        $sheet->setCellValue('A1', $titulo);
         $sheet->mergeCells('A1:E1');
         $sheet->getStyle('A1:E1')->applyFromArray($titleStyle);
         $sheet->getRowDimension('1')->setRowHeight(30);
@@ -718,7 +786,10 @@ function enhanced_excel_export($reservas, $export_type) {
                     ];
                     $sheet->getStyle('A' . $currentRow . ':E' . $currentRow)->applyFromArray($filaStyle);
                     
-                    $sheet->setCellValue('A' . $currentRow, ($currentRow == $first_row) ? $producto : '');
+                    // Asegurar que el nombre del producto esté en UTF-8
+                    // $producto_nombre = html_entity_decode($producto, ENT_QUOTES, 'UTF-8'); // Temporarily removed
+                    
+                    $sheet->setCellValue('A' . $currentRow, ($currentRow == $first_row) ? $producto : ''); // Use original $producto
                     $sheet->setCellValue('B' . $currentRow, $talla);
                     $sheet->setCellValue('C' . $currentRow, $tallas[$talla]['cantidad']);
                     $sheet->setCellValue('D' . $currentRow, $precio_unitario_promedio);
@@ -739,7 +810,7 @@ function enhanced_excel_export($reservas, $export_type) {
             }
             
             // Fila total del producto
-            $sheet->setCellValue('A' . $currentRow, 'TOTAL ' . $producto);
+            $sheet->setCellValue('A' . $currentRow, 'TOTAL ' . $producto); // Use original $producto
             $sheet->mergeCells('A' . $currentRow . ':C' . $currentRow);
             $sheet->setCellValue('D' . $currentRow, $producto_total_cantidad > 0 ? $producto_total_monto / $producto_total_cantidad : 0);
             $sheet->setCellValue('E' . $currentRow, $producto_total_monto);
@@ -843,13 +914,17 @@ function enhanced_excel_export($reservas, $export_type) {
                 
                 if (is_array($detalles_productos)) {
                     foreach ($detalles_productos as $index => $detalle) {
+                        // Convertir explícitamente a UTF-8
+                        // $producto_nombre = html_entity_decode($detalle['producto'], ENT_QUOTES, 'UTF-8'); // Temporarily removed
+                        // $talla_nombre = html_entity_decode($detalle['talla'], ENT_QUOTES, 'UTF-8'); // Temporarily removed
+                        
                         if ($index > 0) {
                             $productos_formateados .= " | ";
                         }
-                        $productos_formateados .= $detalle['producto'] . " - Talla: " . $detalle['talla'] . " - Cant: " . $detalle['cantidad'];
+                        $productos_formateados .= $detalle['producto'] . " - Talla: " . $detalle['talla'] . " - Cant: " . $detalle['cantidad']; // Use original
                     }
                 } else {
-                    $productos_formateados = $reserva['productos'];
+                    $productos_formateados = $reserva['productos']; // Use original
                 }
                 
                 $sheet->setCellValue('A' . $currentRow, $reserva['id']);
@@ -858,9 +933,9 @@ function enhanced_excel_export($reservas, $export_type) {
                 $sheet->setCellValue('D' . $currentRow, $reserva['telefono']);
                 $sheet->setCellValue('E' . $currentRow, isset($reserva['direccion']) ? $reserva['direccion'] : '');
                 $sheet->setCellValue('F' . $currentRow, isset($reserva['comuna']) ? $reserva['comuna'] : '');
-                $sheet->setCellValue('G' . $currentRow, formato_fecha($reserva['fecha']));
+                $sheet->setCellValue('G' . $currentRow, export_format_fecha($reserva['fecha'], false));
                 $sheet->setCellValue('H' . $currentRow, $reserva['total']);
-                $sheet->setCellValue('I' . $currentRow, isset($reserva['fecha_registro']) ? formato_fecha($reserva['fecha_registro']) : '');
+                $sheet->setCellValue('I' . $currentRow, export_format_fecha($reserva['fecha_registro'], false));
                 $sheet->setCellValue('J' . $currentRow, $productos_formateados);
                 $sheet->setCellValue('K' . $currentRow, isset($reserva['observaciones']) ? $reserva['observaciones'] : '');
                 
@@ -914,16 +989,27 @@ function enhanced_excel_export($reservas, $export_type) {
         // Proteger la hoja (solo lectura)
         $sheet->getProtection()->setSheet(true);
         
-        // Crear el archivo Excel
+        // Crear el archivo Excel y configurar opciones para UTF-8
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->setOffice2003Compatibility(false); // Usar formato moderno
+        $writer->setPreCalculateFormulas(true);
+        
+        // Configuraciones específicas para Excel y UTF-8
+        if (method_exists($writer, 'setUseDiskCaching')) {
+            $writer->setUseDiskCaching(true);
+        }
         
         // Limpiar cualquier buffer de salida
         if (ob_get_length()) ob_end_clean();
         
-        // Enviar al navegador - Usando buffers para evitar problemas
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        // Enviar al navegador
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet; charset=UTF-8');
         header('Content-Disposition: attachment; filename="reporte-reservas-' . date('Y-m-d') . '.xlsx"');
         header('Cache-Control: max-age=0');
+        header('Cache-Control: max-age=1'); // IE 9
+        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Fecha en el pasado
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+        header('Cache-Control: cache, must-revalidate');
         header('Pragma: public');
         
         $writer->save('php://output');
