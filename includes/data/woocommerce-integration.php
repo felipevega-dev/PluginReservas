@@ -201,34 +201,218 @@ function reserva_bulk_action_admin_notice() {
 add_action('admin_notices', 'reserva_bulk_action_admin_notice');
 
 /**
- * Add a custom column to the products list
+ * Añadir columna "Reservable" a la lista de productos
  */
 function reserva_add_product_column($columns) {
-    $columns['reservable'] = __('Reservable', 'reserva-form');
-    return $columns;
+    $new_columns = array();
+    
+    foreach ($columns as $key => $column) {
+        $new_columns[$key] = $column;
+        
+        // Añadir columna después del precio
+        if ($key === 'price') {
+            $new_columns['reservable'] = __('Reservable', 'reserva-form');
+        }
+    }
+    
+    return $new_columns;
 }
-add_filter('manage_product_posts_columns', 'reserva_add_product_column');
+add_filter('manage_product_posts_columns', 'reserva_add_product_column', 20);
 
 /**
- * Display content for the custom column
+ * Mostrar contenido de la columna "Reservable"
  */
-function reserva_product_column_content($column, $post_id) {
+function reserva_product_column_content($column, $product_id) {
     if ($column === 'reservable') {
-        $reservable = get_post_meta($post_id, '_reservable', true);
-        echo ($reservable === 'yes') ? '<span style="color:green;">✓</span>' : '<span style="color:red;">✗</span>';
+        $is_reservable = get_post_meta($product_id, '_reservable', true);
+        $checked = $is_reservable === 'yes' ? 'checked' : '';
+        
+        echo '<label class="reserva-switch">';
+        echo '<input type="checkbox" class="reserva-toggle" data-product="' . esc_attr($product_id) . '" ' . $checked . '>';
+        echo '<span class="reserva-slider"></span>';
+        echo '</label>';
     }
 }
 add_action('manage_product_posts_custom_column', 'reserva_product_column_content', 10, 2);
 
 /**
- * Cargar scripts y estilos en páginas de administración específicas
+ * Agregar estilos para el toggle switch
+ */
+function reserva_admin_styles() {
+    // Solo agregar en la página de productos
+    $screen = get_current_screen();
+    if ($screen->id !== 'edit-product') {
+        return;
+    }
+    
+    ?>
+    <style>
+    .reserva-switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+    
+    .reserva-switch input { 
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .reserva-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 24px;
+    }
+    
+    .reserva-slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    
+    input:checked + .reserva-slider {
+        background-color: #2196F3;
+    }
+    
+    input:focus + .reserva-slider {
+        box-shadow: 0 0 1px #2196F3;
+    }
+    
+    input:checked + .reserva-slider:before {
+        transform: translateX(26px);
+    }
+    
+    /* Columna de ancho fijo */
+    .column-reservable {
+        width: 80px;
+        text-align: center;
+    }
+    </style>
+    <?php
+}
+add_action('admin_head', 'reserva_admin_styles');
+
+/**
+ * Agregar script para manejar el toggle con AJAX
  */
 function reserva_admin_scripts() {
+    // Solo agregar en la página de productos
+    $screen = get_current_screen();
+    if ($screen->id !== 'edit-product') {
+        return;
+    }
+    
+    ?>
+    <script>
+    jQuery(document).ready(function($) {
+        $('.reserva-toggle').change(function() {
+            var product_id = $(this).data('product');
+            var is_checked = $(this).is(':checked');
+            var value = is_checked ? 'yes' : 'no';
+            
+            // Mostrar indicador visual de carga
+            var $switch = $(this).closest('.reserva-switch');
+            $switch.css('opacity', '0.5');
+            
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'toggle_product_reservable',
+                    product_id: product_id,
+                    value: value,
+                    nonce: '<?php echo wp_create_nonce("reserva_toggle_nonce"); ?>'
+                },
+                success: function(response) {
+                    $switch.css('opacity', '1');
+                    if (response.success) {
+                        // Mostrar notificación de éxito
+                        var message = is_checked ? 
+                            'Producto marcado como reservable' : 
+                            'Producto desmarcado como reservable';
+                            
+                        $('<div class="notice notice-success is-dismissible"><p>' + message + '</p></div>')
+                            .insertAfter('.wp-header-end')
+                            .delay(3000)
+                            .fadeOut(function() {
+                                $(this).remove();
+                            });
+                    } else {
+                        // Si hay error, revertir el toggle
+                        $(this).prop('checked', !is_checked);
+                        alert('Error al actualizar el estado: ' + response.data);
+                    }
+                }.bind(this),
+                error: function() {
+                    $switch.css('opacity', '1');
+                    $(this).prop('checked', !is_checked);
+                    alert('Error de conexión al actualizar el estado');
+                }.bind(this)
+            });
+        });
+    });
+    </script>
+    <?php
+}
+add_action('admin_footer', 'reserva_admin_scripts');
+
+/**
+ * Endpoint AJAX para toggle de producto reservable
+ */
+function reserva_toggle_product_reservable() {
+    // Verificar nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'reserva_toggle_nonce')) {
+        wp_send_json_error('Verificación de seguridad fallida');
+        return;
+    }
+    
+    // Verificar permisos
+    if (!current_user_can('edit_products')) {
+        wp_send_json_error('Permisos insuficientes');
+        return;
+    }
+    
+    $product_id = intval($_POST['product_id']);
+    $value = sanitize_text_field($_POST['value']);
+    
+    // Actualizar meta
+    update_post_meta($product_id, '_reservable', $value);
+    
+    // Registrar en log
+    $product = wc_get_product($product_id);
+    $product_name = $product ? $product->get_name() : 'Producto #' . $product_id;
+    $action = $value === 'yes' ? 'marcado' : 'desmarcado';
+    error_log("Producto '{$product_name}' {$action} como reservable por " . wp_get_current_user()->user_login);
+    
+    wp_send_json_success();
+}
+add_action('wp_ajax_toggle_product_reservable', 'reserva_toggle_product_reservable');
+
+// Nota: La función reserva_product_column_content ya está definida anteriormente
+// y ya tiene su add_action correspondiente
+
+/**
+ * Cargar scripts y estilos en páginas de administración específicas
+ */
+function reserva_admin_wc_scripts() {
     // Detectar la página actual
     global $pagenow, $typenow;
     $page = isset($_GET['page']) ? $_GET['page'] : '';
-    
-    error_log("Cargando admin scripts - Página: {$pagenow}, Type: {$typenow}, Custom page: {$page}");
+    $screen = get_current_screen();
     
     // Cargar en la página específica de WooCommerce para Reservas
     if ($page === 'reserva-woocommerce') {
@@ -246,12 +430,9 @@ function reserva_admin_scripts() {
             'ajaxurl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('reserva_wc_nonce')
         ));
-        
-        // Imprimir JS directamente para depuración
-        add_action('admin_footer', 'reserva_print_debug_js');
     }
 }
-add_action('admin_enqueue_scripts', 'reserva_admin_scripts');
+add_action('admin_enqueue_scripts', 'reserva_admin_wc_scripts');
 
 /**
  * Imprimir JavaScript de depuración directamente en el pie de página
