@@ -145,3 +145,77 @@ function reserva_save_product_reservable_option($product_id) {
     update_post_meta($product_id, '_reservable', $reservable);
 }
 add_action('woocommerce_process_product_meta', 'reserva_save_product_reservable_option');
+
+/**
+ * Add a bulk action to mark products as reservable
+ */
+function reserva_register_bulk_actions($bulk_actions) {
+    $bulk_actions['mark_reservable'] = __('Marcar como reservable', 'reserva-form');
+    $bulk_actions['unmark_reservable'] = __('Desmarcar como reservable', 'reserva-form');
+    return $bulk_actions;
+}
+add_filter('bulk_actions-edit-product', 'reserva_register_bulk_actions');
+
+/**
+ * Handle bulk action to mark products as reservable
+ */
+function reserva_handle_bulk_actions($redirect_to, $action, $post_ids) {
+    if ($action !== 'mark_reservable' && $action !== 'unmark_reservable') {
+        return $redirect_to;
+    }
+
+    $value = ($action === 'mark_reservable') ? 'yes' : 'no';
+    $processed_ids = array();
+
+    foreach ($post_ids as $post_id) {
+        update_post_meta($post_id, '_reservable', $value);
+        $processed_ids[] = $post_id;
+    }
+
+    return add_query_arg(array(
+        'bulk_action' => $action,
+        'processed_count' => count($processed_ids),
+        'processed_ids' => implode(',', $processed_ids),
+    ), $redirect_to);
+}
+add_filter('handle_bulk_actions-edit-product', 'reserva_handle_bulk_actions', 10, 3);
+
+/**
+ * Display admin notice after bulk action
+ */
+function reserva_bulk_action_admin_notice() {
+    if (empty($_REQUEST['bulk_action'])) {
+        return;
+    }
+
+    $count = intval($_REQUEST['processed_count']);
+
+    if ($_REQUEST['bulk_action'] === 'mark_reservable') {
+        $message = sprintf(_n('%s producto marcado como reservable.', '%s productos marcados como reservables.', $count, 'reserva-form'), $count);
+    } else {
+        $message = sprintf(_n('%s producto desmarcado como reservable.', '%s productos desmarcados como reservables.', $count, 'reserva-form'), $count);
+    }
+
+    echo '<div class="notice notice-success is-dismissible"><p>' . esc_html($message) . '</p></div>';
+}
+add_action('admin_notices', 'reserva_bulk_action_admin_notice');
+
+/**
+ * Add a custom column to the products list
+ */
+function reserva_add_product_column($columns) {
+    $columns['reservable'] = __('Reservable', 'reserva-form');
+    return $columns;
+}
+add_filter('manage_product_posts_columns', 'reserva_add_product_column');
+
+/**
+ * Display content for the custom column
+ */
+function reserva_product_column_content($column, $post_id) {
+    if ($column === 'reservable') {
+        $reservable = get_post_meta($post_id, '_reservable', true);
+        echo ($reservable === 'yes') ? '<span style="color:green;">✓</span>' : '<span style="color:red;">✗</span>';
+    }
+}
+add_action('manage_product_posts_custom_column', 'reserva_product_column_content', 10, 2);

@@ -15,14 +15,25 @@ if (!defined('ABSPATH')) {
 function reserva_register_woocommerce_products_menu() {
     add_submenu_page(
         'reserva-lista',
+        'Productos WooCommerce para Reservas',
         'Productos WooCommerce',
-        'Productos WC',
         'manage_options',
         'reserva-woocommerce',
         'reserva_woocommerce_admin_page'
     );
 }
 add_action('admin_menu', 'reserva_register_woocommerce_products_menu', 21);
+
+/**
+ * Add a direct link to WooCommerce products page in the plugin action links
+ */
+function reserva_add_action_links($links) {
+    $custom_links = array(
+        '<a href="' . admin_url('admin.php?page=reserva-woocommerce') . '">Configurar Productos WC</a>',
+    );
+    return array_merge($custom_links, $links);
+}
+add_filter('plugin_action_links_reserva-form/reserva-form.php', 'reserva_add_action_links');
 
 /**
  * WooCommerce products admin page

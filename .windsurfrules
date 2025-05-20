@@ -1,6 +1,10 @@
 # WindSurf Local Rules - Plugin de Reservas (WordPress + WooCommerce)
 # Autor: Felipe Vega
 
+## Cada vez que se haga cambio, se debe actualizar la versión del plugin en el archivo reserva-form.php
+
+## Cada vez que se haga cambio, Si al preguntar se confirma que el trabajo funcionó, se debe hacer un commit con el mensaje "WooCommerce: X" donde X es el número de la iteración. Por ejemplo, si es la primera iteración, el mensaje será "WooCommerce: 1". En el caso de que no me guste lo que se hizo o pida un cambio, no se debe actualizar, solo cuando se confirme que el trabajo funcionó.
+
 ## 🎯 Objetivo principal
 Lograr la **correcta integración** del sistema de reservas con los **productos existentes en WooCommerce**, eliminando el uso de productos hardcodeados o estáticos dentro del formulario.
 

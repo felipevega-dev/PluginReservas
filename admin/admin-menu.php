@@ -13,21 +13,23 @@ function reserva_admin_menu() {
         'Reservas', // Título de la página
         'Reservas', // Texto del menú
         'manage_options', // Capacidad requerida
-        'reservas', // Slug del menú
-        'reserva_admin_dashboard', // Función de callback
-        'dashicons-calendar-alt', // Icono
+        'reserva-lista', // Slug del menú
+        'reserva_lista_page', // Función de callback
+        'dashicons-clipboard', // Icono
         30 // Posición
     );
     
-    // Añadir submenú para listar reservas
-    add_submenu_page(
-        'reservas', // Parent slug
-        'Lista de Reservas', // Título de la página
-        'Lista de Reservas', // Texto del menú
-        'manage_options', // Capacidad requerida
-        'reserva-lista', // Slug del menú
-        'mostrar_lista_reservas' // Función de callback
-    );
+    // Añadir submenú para productos WooCommerce
+    if (function_exists('reserva_is_woocommerce_active') && reserva_is_woocommerce_active()) {
+        add_submenu_page(
+            'reserva-lista', // Parent slug
+            'Productos WooCommerce', // Título de la página
+            'Productos WooCommerce', // Texto del menú
+            'manage_options', // Capacidad requerida
+            'reserva-woocommerce', // Slug del menú
+            'reserva_woocommerce_admin_page' // Función de callback
+        );
+    }
 }
 add_action( 'admin_menu', 'reserva_admin_menu' );
 
