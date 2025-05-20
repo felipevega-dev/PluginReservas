@@ -13,18 +13,51 @@ function reserva_admin_menu() {
         'Reservas', // Título de la página
         'Reservas', // Texto del menú
         'manage_options', // Capacidad requerida
-        'reserva-lista', // Slug del menú
-        'reserva_lista_page', // Función de callback
-        'dashicons-clipboard', // Icono
+        'reservas', // Slug del menú
+        'reserva_admin_dashboard', // Función de callback
+        'dashicons-calendar-alt', // Icono
         30 // Posición
+    );
+    
+    // Añadir submenú para el dashboard (primera opción)
+    add_submenu_page(
+        'reservas', // Parent slug
+        'Dashboard', // Título de la página
+        'Dashboard', // Texto del menú
+        'manage_options', // Capacidad requerida
+        'reservas', // Slug del menú
+        'reserva_admin_dashboard' // Función de callback
+    );
+    
+    // Añadir submenú para listar reservas
+    add_submenu_page(
+        'reservas', // Parent slug
+        'Lista de Reservas', // Título de la página
+        'Lista de Reservas', // Texto del menú
+        'manage_options', // Capacidad requerida
+        'reserva-lista', // Slug del menú
+        'mostrar_lista_reservas' // Función de callback
     );
     
     // Añadir submenú para productos WooCommerce
     if (function_exists('reserva_is_woocommerce_active') && reserva_is_woocommerce_active()) {
         add_submenu_page(
-            'reserva-lista', // Parent slug
-            'Productos WooCommerce', // Título de la página
-            'Productos WooCommerce', // Texto del menú
+            'reservas', // Parent slug
+            'Productos para Reservas', // Título de la página
+            'Productos para Reservas', // Texto del menú
+            'manage_options', // Capacidad requerida
+            'reserva-woocommerce', // Slug del menú
+            'reserva_woocommerce_admin_page' // Función de callback
+        );
+    }
+}
+    
+    // Añadir submenú para productos WooCommerce
+    if (function_exists('reserva_is_woocommerce_active') && reserva_is_woocommerce_active()) {
+        add_submenu_page(
+            'reservas', // Parent slug
+            'Productos para Reservas', // Título de la página
+            'Productos para Reservas', // Texto del menú
             'manage_options', // Capacidad requerida
             'reserva-woocommerce', // Slug del menú
             'reserva_woocommerce_admin_page' // Función de callback
@@ -814,35 +847,13 @@ function reserva_admin_dashboard() {
  */
 function reserva_get_product_stats() {
     global $wpdb;
-    $table_name = $wpdb->prefix . 'reservas';
-    $products = array(
-        'pantalon-buzo' => array('cantidad' => 0, 'total' => 0),
-        'polera' => array('cantidad' => 0, 'total' => 0),
-        'poleron' => array('cantidad' => 0, 'total' => 0)
-    );
     
-    // Obtener todas las reservas con detalles de productos
-    $reservas = $wpdb->get_results("SELECT productos FROM $table_name WHERE productos IS NOT NULL");
+    $stats = array();
     
-    foreach ($reservas as $reserva) {
-        $detalles = json_decode($reserva->productos, true);
-        
-        if (is_array($detalles)) {
-            foreach ($detalles as $detalle) {
-                $producto_nombre = $detalle['producto'];
-                $cantidad = intval($detalle['cantidad']);
-                $precio_unitario = isset($detalle['precio']) ? floatval($detalle['precio']) : 0;
-                $subtotal = isset($detalle['subtotal']) ? floatval($detalle['subtotal']) : ($cantidad * $precio_unitario);
-                
-                // Determinar el slug del producto basado en el nombre
-                $producto_slug = '';
-                if (strpos($producto_nombre, 'Pantalón') !== false) {
-                    $producto_slug = 'pantalon-buzo';
-                } elseif (strpos($producto_nombre, 'Polera') !== false) {
-                    $producto_slug = 'polera';
-                } elseif (strpos($producto_nombre, 'Polerón') !== false) {
-                    $producto_slug = 'poleron';
-                }
+    // Obtener productos reservados
+    $sql = "SELECT ri.producto_slug, ri.talla, SUM(ri.cantidad) as cantidad_total, SUM(ri.precio * ri.cantidad) as total 
+           FROM {$wpdb->prefix}reservas_items ri 
+           GROUP BY ri.producto_slug, ri.talla";
                 
                 // Incrementar el contador para este producto
                 if (isset($products[$producto_slug])) {
