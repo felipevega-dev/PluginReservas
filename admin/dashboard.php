@@ -876,6 +876,22 @@ function reserva_get_product_stats() {
 function reserva_get_product_info_for_dashboard($slug) {
     // Primero intentar obtener desde WooCommerce
     if (function_exists('reserva_is_woocommerce_active') && reserva_is_woocommerce_active()) {
+        // Intentar obtener el producto por slug primero
+        error_log("Buscando producto WooCommerce con slug: {$slug}");
+        
+        if (function_exists('reserva_get_woocommerce_product_by_slug')) {
+            $product = reserva_get_woocommerce_product_by_slug($slug);
+            
+            if ($product) {
+                error_log("Producto WooCommerce encontrado por slug: " . $product->get_name());
+                return array(
+                    'nombre' => $product->get_name(),
+                    'imagen_url' => wp_get_attachment_url($product->get_image_id()) ?: plugins_url('assets/images/product-placeholder.jpg', dirname(__FILE__))
+                );
+            }
+        }
+        
+        // Intentar buscar por la función estándar de WooCommerce
         $wc_products = wc_get_products(array(
             'status' => 'publish',
             'limit' => 1,
@@ -884,6 +900,7 @@ function reserva_get_product_info_for_dashboard($slug) {
         
         if (!empty($wc_products)) {
             $product = $wc_products[0];
+            error_log("Producto WooCommerce encontrado por wc_get_products: " . $product->get_name());
             return array(
                 'nombre' => $product->get_name(),
                 'imagen_url' => wp_get_attachment_url($product->get_image_id()) ?: plugins_url('assets/images/product-placeholder.jpg', dirname(__FILE__))
@@ -944,9 +961,63 @@ function reserva_ajax_get_product_size_details() {
         return;
     }
     
+    error_log("Obteniendo detalles de tallas para producto: {$product}");
+    
     global $wpdb;
     
-    // Obtener datos de tallas para este producto
+    // Estructura para almacenar conteo de tallas y valores
+    $tallas = array();
+    $total_general = 0;
+    
+    // 1. Buscar primero en la tabla de reservas usando product_details (campo JSON)
+    // Esto captura productos de WooCommerce y productos antiguos en el nuevo formato
+    $reservas = $wpdb->get_results(
+        "SELECT id, productos, product_details FROM {$wpdb->prefix}reservas"
+    );
+    
+    error_log("Total de reservas encontradas: " . count($reservas));
+    
+    foreach ($reservas as $reserva) {
+        // Intentar primero con product_details (formato más nuevo)
+        $detalles = json_decode($reserva->product_details, true);
+        
+        // Si no hay datos en product_details, intentar con productos
+        if (empty($detalles) || !is_array($detalles)) {
+            $detalles = json_decode($reserva->productos, true);
+        }
+        
+        if (is_array($detalles)) {
+            foreach ($detalles as $detalle) {
+                // Verificar si corresponde al producto buscado
+                $es_este_producto = false;
+                
+                if (isset($detalle['producto_slug']) && $detalle['producto_slug'] === $product) {
+                    $es_este_producto = true;
+                }
+                
+                if ($es_este_producto && isset($detalle['talla'], $detalle['cantidad'], $detalle['subtotal'])) {
+                    $talla = $detalle['talla'];
+                    $cantidad = intval($detalle['cantidad']);
+                    $subtotal = floatval($detalle['subtotal']);
+                    
+                    if (!isset($tallas[$talla])) {
+                        $tallas[$talla] = array(
+                            'cantidad' => 0,
+                            'total' => 0
+                        );
+                    }
+                    
+                    $tallas[$talla]['cantidad'] += $cantidad;
+                    $tallas[$talla]['total'] += $subtotal;
+                    $total_general += $subtotal;
+                    
+                    error_log("Detalle encontrado para {$product}: Talla {$talla}, Cantidad {$cantidad}, Subtotal {$subtotal}");
+                }
+            }
+        }
+    }
+    
+    // 2. Buscar también en la tabla antigua de items para compatibilidad
     $sql = $wpdb->prepare(
         "SELECT ri.talla, SUM(ri.cantidad) as cantidad_total, SUM(ri.precio * ri.cantidad) as total 
          FROM {$wpdb->prefix}reservas_items ri 
@@ -956,10 +1027,7 @@ function reserva_ajax_get_product_size_details() {
     );
     
     $resultados = $wpdb->get_results($sql);
-    
-    // Estructura para almacenar conteo de tallas y valores
-    $tallas = array();
-    $total_general = 0;
+    error_log("Resultados de tabla antigua: " . count($resultados));
     
     foreach ($resultados as $resultado) {
         $talla = $resultado->talla;

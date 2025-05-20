@@ -293,11 +293,20 @@ function reserva_print_debug_js() {
 function reserva_get_woocommerce_product_by_slug($slug) {
     // Check if WooCommerce is active
     if (!reserva_is_woocommerce_active()) {
-        error_log('WooCommerce no está activo. No se pueden obtener productos.');
+        error_log("WooCommerce no está activo al intentar obtener producto por slug: {$slug}");
         return false;
     }
     
-    // Get products with the given slug
+    // Sanity check - validar que el slug no esté vacío
+    if (empty($slug)) {
+        error_log("Se intentó buscar un producto con slug vacío");
+        return false;
+    }
+    
+    // Depuración
+    error_log("Buscando producto WooCommerce con slug: {$slug}");
+    
+    // Obtener productos con este slug
     $args = array(
         'status' => 'publish',
         'limit' => 1,
@@ -306,21 +315,33 @@ function reserva_get_woocommerce_product_by_slug($slug) {
     
     $products = wc_get_products($args);
     
-    // Check if any product was found
     if (!empty($products)) {
-        $product = $products[0];
-        
-        // Check if the product is marked as reservable
-        $reservable = get_post_meta($product->get_id(), '_reservable', true);
-        
-        // Debugging
-        error_log('Verificando producto WooCommerce: ' . $product->get_name() . ' (ID: ' . $product->get_id() . '), Reservable: ' . $reservable);
-        
-        // Permitir productos aunque no estén marcados como reservables (para compatibilidad)
-        return $product;
-    } else {
-        error_log('No se encontró ningún producto con slug: ' . $slug);
+        error_log("Producto WooCommerce encontrado con slug '{$slug}': " . $products[0]->get_name());
+        return $products[0];
     }
+    
+    // Si no se encuentra por slug, intentar buscar por ID
+    if (is_numeric($slug)) {
+        $product = wc_get_product(intval($slug));
+        if ($product && $product->get_status() === 'publish') {
+            error_log("Producto WooCommerce encontrado por ID {$slug}: " . $product->get_name());
+            return $product;
+        }
+    }
+    
+    // Intentar buscar productos similares por nombre
+    $products = wc_get_products(array(
+        'status' => 'publish',
+        'limit' => 1,
+        's' => $slug
+    ));
+    
+    if (!empty($products)) {
+        error_log("Producto WooCommerce encontrado por búsqueda '{$slug}': " . $products[0]->get_name());
+        return $products[0];
+    }
+    
+    error_log('No se encontró ningún producto con slug: ' . $slug);
     
     return false;
 }
