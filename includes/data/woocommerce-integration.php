@@ -219,3 +219,44 @@ function reserva_product_column_content($column, $post_id) {
     }
 }
 add_action('manage_product_posts_custom_column', 'reserva_product_column_content', 10, 2);
+
+/**
+ * Get a WooCommerce product by its slug
+ * 
+ * @param string $slug Product slug
+ * @return WC_Product|false Product object or false if not found
+ */
+function reserva_get_woocommerce_product_by_slug($slug) {
+    // Check if WooCommerce is active
+    if (!reserva_is_woocommerce_active()) {
+        error_log('WooCommerce no está activo. No se pueden obtener productos.');
+        return false;
+    }
+    
+    // Get products with the given slug
+    $args = array(
+        'status' => 'publish',
+        'limit' => 1,
+        'slug' => $slug
+    );
+    
+    $products = wc_get_products($args);
+    
+    // Check if any product was found
+    if (!empty($products)) {
+        $product = $products[0];
+        
+        // Check if the product is marked as reservable
+        $reservable = get_post_meta($product->get_id(), '_reservable', true);
+        
+        if ($reservable === 'yes') {
+            return $product;
+        } else {
+            error_log('El producto con slug: ' . $slug . ' no está marcado como reservable');
+        }
+    } else {
+        error_log('No se encontró ningún producto con slug: ' . $slug);
+    }
+    
+    return false;
+}

@@ -113,45 +113,94 @@ function procesar_reserva() {
                     $unitPrice  = floatval($item['unitPrice']);
                     $subtotal   = isset($item['subtotal']) ? floatval($item['subtotal']) : ($unitPrice * $cant);
                     
-                    // Obtener el ID del producto
-                    $producto = reserva_get_producto_by_slug($prod_slug);
+                    // Primero intentar obtener el producto desde WooCommerce
+                    $producto_wc = false;
+                    $producto_db = false;
+                    $producto_encontrado = false;
                     
-                    if ($producto && $cant > 0) {
-                        // Registrar éxito del producto encontrado
-                        error_log('Producto encontrado: ' . $producto->nombre);
-                        
-                        // Obtener ID de la talla
-                        $talla_id = reserva_get_talla_id_by_nombre($talla);
-                        
-                        if ($talla_id) {
-                            error_log('Talla encontrada con ID: ' . $talla_id);
+                    // Verificar si WooCommerce está activo y buscar el producto
+                    if (function_exists('reserva_is_woocommerce_active') && reserva_is_woocommerce_active() && function_exists('reserva_get_woocommerce_product_by_slug')) {
+                        $producto_wc = reserva_get_woocommerce_product_by_slug($prod_slug);
+                        if ($producto_wc) {
+                            error_log('Producto WooCommerce encontrado: ' . $producto_wc->get_name());
+                            $producto_encontrado = true;
+                        }
+                    }
+                    
+                    // Si no se encontró en WooCommerce, buscar en la base de datos antigua
+                    if (!$producto_encontrado) {
+                        $producto_db = reserva_get_producto_by_slug($prod_slug);
+                        if ($producto_db && $cant > 0) {
+                            error_log('Producto encontrado en DB antigua: ' . $producto_db->nombre);
+                            $producto_encontrado = true;
+                        }
+                    }
+                    
+                    // Procesar el producto encontrado
+                    if ($producto_encontrado && $cant > 0) {
+                        // Determinar si es un producto de WooCommerce o de la base de datos antigua
+                        if ($producto_wc) {
+                            // Producto de WooCommerce
+                            $product_id = $producto_wc->get_id();
+                            $product_name = $producto_wc->get_name();
                             
-                            // Verificar precio correcto
-                            $precios = reserva_get_precios_producto($producto->id);
+                            // Usar el precio del producto de WooCommerce
+                            // Podríamos usar variaciones para las tallas, pero por ahora usamos el precio base
+                            $precio_unitario = floatval($unitPrice); // Usamos el precio enviado desde el formulario
+                            $subtotal = $precio_unitario * $cant;
+                            $totalPrecio += $subtotal;
                             
-                            if (isset($precios[$talla])) {
-                                $unitPrice = $precios[$talla];
-                                $subtotal = $unitPrice * $cant;
-                                $totalPrecio += $subtotal;
-                                
-                                $items_data[] = array(
-                                    'producto_id' => $producto->id,
-                                    'talla_id' => $talla_id,
-                                    'cantidad' => $cant,
-                                    'precio_unitario' => $unitPrice
-                                );
-                                
-                                error_log('Item agregado correctamente');
-                            } else {
-                                error_log('No se encontró precio para talla: ' . $talla);
-                                error_log('Precios disponibles: ' . print_r($precios, true));
-                            }
+                            // Crear un ID de talla temporal para WooCommerce
+                            // En una implementación completa, esto debería manejar variaciones de productos
+                            $talla_id = 0; // Valor temporal
+                            
+                            // Registrar el producto en los items
+                            $items_data[] = array(
+                                'producto_id' => $product_id,
+                                'producto_wc' => true, // Marcar como producto de WooCommerce
+                                'producto_slug' => $prod_slug,
+                                'talla' => $talla,
+                                'cantidad' => $cant,
+                                'precio_unitario' => $precio_unitario
+                            );
+                            
+                            error_log('Item WooCommerce agregado correctamente: ' . $product_name . ', Talla: ' . $talla . ', Precio: ' . $precio_unitario);
                         } else {
-                            error_log('No se encontró ID para la talla: ' . $talla);
+                            // Producto de la base de datos antigua
+                            // Obtener ID de la talla
+                            $talla_id = reserva_get_talla_id_by_nombre($talla);
+                            
+                            if ($talla_id) {
+                                error_log('Talla encontrada con ID: ' . $talla_id);
+                                
+                                // Verificar precio correcto
+                                $precios = reserva_get_precios_producto($producto_db->id);
+                                
+                                if (isset($precios[$talla])) {
+                                    $unitPrice = $precios[$talla];
+                                    $subtotal = $unitPrice * $cant;
+                                    $totalPrecio += $subtotal;
+                                    
+                                    $items_data[] = array(
+                                        'producto_id' => $producto_db->id,
+                                        'producto_wc' => false, // Marcar como producto de la base de datos antigua
+                                        'talla_id' => $talla_id,
+                                        'cantidad' => $cant,
+                                        'precio_unitario' => $unitPrice
+                                    );
+                                    
+                                    error_log('Item DB antigua agregado correctamente');
+                                } else {
+                                    error_log('No se encontró precio para talla: ' . $talla);
+                                    error_log('Precios disponibles: ' . print_r($precios, true));
+                                }
+                            } else {
+                                error_log('No se encontró ID para la talla: ' . $talla);
+                            }
                         }
                     } else {
-                        if (!$producto) {
-                            error_log('No se encontró el producto con slug: ' . $prod_slug);
+                        if (!$producto_encontrado) {
+                            error_log('No se encontró el producto con slug: ' . $prod_slug . ' ni en WooCommerce ni en la base de datos antigua');
                         }
                         if ($cant <= 0) {
                             error_log('Cantidad inválida: ' . $cant);

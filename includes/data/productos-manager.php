@@ -234,22 +234,52 @@ function reserva_guardar_reserva($reserva_data, $items_data) {
     // Crear una matriz para los productos en formato JSON
     $productos_json = array();
     foreach ($items_data as $item) {
-        // Obtener nombres de producto y talla
-        $producto_nombre = $wpdb->get_var(
-            $wpdb->prepare("SELECT nombre FROM {$wpdb->prefix}reservas_productos WHERE id = %d", $item['producto_id'])
-        );
-        
-        $talla_nombre = $wpdb->get_var(
-            $wpdb->prepare("SELECT talla FROM {$wpdb->prefix}reservas_tallas WHERE id = %d", $item['talla_id'])
-        );
-        
-        $productos_json[] = array(
-            'producto' => $producto_nombre ?? 'Producto #' . $item['producto_id'],
-            'talla' => $talla_nombre ?? 'Talla #' . $item['talla_id'],
-            'cantidad' => $item['cantidad'],
-            'precio' => $item['precio_unitario'],
-            'subtotal' => $item['precio_unitario'] * $item['cantidad']
-        );
+        // Verificar si es un producto de WooCommerce o de la base de datos antigua
+        if (isset($item['producto_wc']) && $item['producto_wc'] === true) {
+            // Producto de WooCommerce
+            if (function_exists('wc_get_product')) {
+                $producto_wc = wc_get_product($item['producto_id']);
+                if ($producto_wc) {
+                    $producto_nombre = $producto_wc->get_name();
+                } else {
+                    $producto_nombre = 'Producto WC #' . $item['producto_id'];
+                }
+            } else {
+                $producto_nombre = 'Producto WC #' . $item['producto_id'];
+            }
+            
+            // Para productos de WooCommerce, usamos directamente la talla enviada
+            $talla_nombre = isset($item['talla']) ? $item['talla'] : 'Talla no especificada';
+            
+            $productos_json[] = array(
+                'producto' => $producto_nombre,
+                'talla' => $talla_nombre,
+                'cantidad' => $item['cantidad'],
+                'precio' => $item['precio_unitario'],
+                'subtotal' => $item['precio_unitario'] * $item['cantidad'],
+                'producto_wc' => true,
+                'producto_id' => $item['producto_id'],
+                'producto_slug' => isset($item['producto_slug']) ? $item['producto_slug'] : ''
+            );
+        } else {
+            // Producto de la base de datos antigua
+            $producto_nombre = $wpdb->get_var(
+                $wpdb->prepare("SELECT nombre FROM {$wpdb->prefix}reservas_productos WHERE id = %d", $item['producto_id'])
+            );
+            
+            $talla_nombre = $wpdb->get_var(
+                $wpdb->prepare("SELECT talla FROM {$wpdb->prefix}reservas_tallas WHERE id = %d", $item['talla_id'])
+            );
+            
+            $productos_json[] = array(
+                'producto' => $producto_nombre ?? 'Producto #' . $item['producto_id'],
+                'talla' => $talla_nombre ?? 'Talla #' . $item['talla_id'],
+                'cantidad' => $item['cantidad'],
+                'precio' => $item['precio_unitario'],
+                'subtotal' => $item['precio_unitario'] * $item['cantidad'],
+                'producto_wc' => false
+            );
+        }
     }
     
     // Preparar datos exactamente según la estructura de la tabla
