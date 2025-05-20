@@ -152,6 +152,369 @@ function reserva_admin_dashboard() {
         </div>
     </div>';
     
+    // Estilos inline para el dashboard
+    echo '<style>
+        .wrap h1, .wrap h2, .wrap h3 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Header container con reservas y enlaces */
+        .reserva-header-container {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        /* Tarjeta de reservas principal */
+        .reserva-stat-main {
+            flex: 3;
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+        .reserva-total-card {
+            background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+            color: white;
+        }
+        .reserva-total-card h2, .reserva-total-card p {
+            color: white !important;
+        }
+        
+        /* Enlaces rápidos a la derecha */
+        .reserva-quick-links {
+            flex: 1;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        .reserva-quick-links h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .quick-links-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: auto;
+        }
+        .quick-links-buttons .button {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            justify-content: center;
+            padding: 10px 15px;
+            font-size: 14px;
+            width: 100%;
+        }
+        
+        /* Grid de productos */
+        .reserva-dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .reserva-stat-card {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .reserva-stat-card:hover, .reserva-stat-main:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        }
+        
+        /* Tarjetas de productos */
+        .reserva-product-card {
+            position: relative;
+            overflow: hidden;
+        }
+        .card-header {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        .card-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 20px;
+        }
+        .reserva-total-card .card-icon {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        .card-icon .dashicons {
+            font-size: 28px;
+            width: 28px;
+            height: 28px;
+            color: white;
+        }
+        .card-img {
+            width: 150px;
+            height: 150px;
+            overflow: hidden;
+            border-radius: 6px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        .card-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .card-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .reserva-total-card .card-content {
+            margin-left: 20px;
+        }
+        .card-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 15px;
+        }
+        .reserva-stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #0073aa;
+            margin: 5px 0;
+            line-height: 1.2;
+        }
+        .reserva-stat-unit {
+            font-size: 16px;
+            font-weight: normal;
+            opacity: 0.7;
+        }
+        .reserva-stat-subtitle {
+            margin: 5px 0 0;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+        .reserva-product-card .button {
+            margin-top: auto;
+        }
+        
+        /* Contenedor de detalles de tallas */
+        .size-details-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin: 0 0 20px 0;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Sección de gráficos */
+        .reserva-charts-section {
+            margin: 30px 0;
+        }
+        .reserva-charts-section h2 {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        /* Grid para gráficos */
+        .reserva-charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: auto auto;
+            gap: 20px;
+        }
+        .chart-pie, .chart-bar {
+            grid-column: span 1;
+        }
+        .chart-line {
+            grid-column: span 2;
+        }
+        .reserva-chart-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .chart-wrapper {
+            height: 280px;
+            margin-top: 15px;
+        }
+        .chart-wrapper-line {
+            height: 250px;
+        }
+        
+        /* Tablas */
+        .size-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        .size-table th, .size-table td {
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+            text-align: center;
+        }
+        .size-table thead th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        .size-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .size-table tfoot {
+            font-weight: bold;
+            background-color: #f0f0f0;
+        }
+        .size-table .size-subtotal {
+            text-align: right;
+            color: #0073aa;
+        }
+        
+        /* Modal */
+        .reserva-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .reserva-modal-content {
+            background-color: #fefefe;
+            margin: 50px auto;
+            padding: 0;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 1000px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .reserva-modal-header {
+            padding: 15px 20px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .reserva-modal-header h2 {
+            margin: 0;
+        }
+        .reserva-modal-close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .reserva-modal-close:hover {
+            color: #555;
+        }
+        .reserva-modal-body {
+            padding: 20px;
+        }
+        .reserva-modal-flex {
+            display: flex;
+            gap: 20px;
+        }
+        .size-details-table, .size-details-chart {
+            flex: 1;
+        }
+        .size-details-chart {
+            min-height: 300px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .reserva-charts-grid {
+                grid-template-columns: 1fr;
+            }
+            .chart-line {
+                grid-column: span 1;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .reserva-header-container {
+                flex-direction: column;
+            }
+            .reserva-dashboard-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .quick-links-buttons {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            .quick-links-buttons .button {
+                width: auto;
+            }
+            .reserva-modal-flex {
+                flex-direction: column;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .reserva-dashboard-stats {
+                grid-template-columns: 1fr;
+            }
+            .reserva-total-card {
+                flex-direction: column;
+                align-items: flex-start;
+                text-align: center;
+            }
+            .reserva-total-card .card-icon {
+                margin: 0 auto 15px;
+            }
+            .reserva-total-card .card-content {
+                margin-left: 0;
+                text-align: center;
+                width: 100%;
+            }
+            .card-stats {
+                flex-direction: column;
+            }
+            .reserva-modal-content {
+                width: 95%;
+                margin: 20px auto;
+            }
+        }
+    </style>';
+    
     // Preparar datos para los gráficos
     $product_labels = array();
     $product_data = array();
