@@ -113,6 +113,10 @@ function procesar_reserva() {
                     $unitPrice  = floatval($item['unitPrice']);
                     $subtotal   = isset($item['subtotal']) ? floatval($item['subtotal']) : ($unitPrice * $cant);
                     
+                    // Obtener el nombre del producto directamente del frontend si está disponible
+                    $product_name_from_frontend = isset($item['producto']) ? sanitize_text_field($item['producto']) : '';  
+                    error_log("Nombre de producto del frontend: {$product_name_from_frontend}");
+                    
                     // Primero intentar obtener el producto desde WooCommerce
                     $producto_wc = false;
                     $producto_db = false;
@@ -142,7 +146,10 @@ function procesar_reserva() {
                         if ($producto_wc) {
                             // Producto de WooCommerce
                             $product_id = $producto_wc->get_id();
-                            $product_name = $producto_wc->get_name();
+                            
+                            // Usar el nombre del frontend si está disponible, sino usar el de WooCommerce
+                            $product_name = !empty($product_name_from_frontend) ? $product_name_from_frontend : $producto_wc->get_name();
+                            error_log("Usando nombre de producto para WooCommerce: {$product_name}, slug: {$prod_slug}");
                             
                             // Usar el precio del producto de WooCommerce
                             // Podríamos usar variaciones para las tallas, pero por ahora usamos el precio base
@@ -183,11 +190,15 @@ function procesar_reserva() {
                                     $subtotal = $unitPrice * $cant;
                                     $totalPrecio += $subtotal;
                                     
+                                    // Usar el nombre del frontend si está disponible, sino usar el de la DB
+                                    $product_name = !empty($product_name_from_frontend) ? $product_name_from_frontend : $producto_db->nombre;
+                                    error_log("Usando nombre de producto para DB antigua: {$product_name}, slug: {$prod_slug}");
+                                    
                                     $items_data[] = array(
                                         'producto_id' => $producto_db->id,
                                         'producto_wc' => false, // Marcar como producto de la base de datos antigua
                                         'producto_slug' => $prod_slug,
-                                        'producto' => $producto_db->nombre, // Añadir el nombre del producto
+                                        'producto' => $product_name, // Añadir el nombre del producto
                                         'talla_id' => $talla_id,
                                         'talla' => $talla,
                                         'cantidad' => $cant,
