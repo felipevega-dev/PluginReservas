@@ -195,12 +195,30 @@ function reserva_woocommerce_admin_page() {
 
     // Añadir filtro por categoría si está seleccionado
     if ($category > 0) {
-        $args['category'] = array($category);
+        // Usar tax_query para filtrar por categoría de forma más precisa
+        $args['tax_query'] = array(
+            array(
+                'taxonomy' => 'product_cat',
+                'field'    => 'term_id',
+                'terms'    => $category,
+            ),
+        );
     }
 
-    // Añadir búsqueda si hay término
+    // Añadir búsqueda si hay término (buscar en título y SKU)
     if (!empty($search)) {
-        $args['search'] = $search;
+        // Usar el parámetro de búsqueda estándar de WooCommerce
+        $args['s'] = $search;
+        
+        // También buscar por SKU
+        $args['meta_query'] = array(
+            'relation' => 'OR',
+            array(
+                'key'     => '_sku',
+                'value'   => $search,
+                'compare' => 'LIKE'
+            )
+        );
     }
     
     // Filtrar por productos reservables o no reservables
@@ -277,6 +295,48 @@ function reserva_woocommerce_admin_page() {
             <!-- Instrucciones -->
             <div class="reserva-admin-filters">
                 <p><strong>Instrucciones:</strong> Marque las casillas de los productos que desea habilitar para reserva. Los productos marcados aparecerán en el formulario de reservas.</p>
+                
+                <!-- Filtros y búsqueda -->
+                <div class="reserva-search-filters">
+                    <form method="get" class="search-filter-form">
+                        <input type="hidden" name="page" value="reserva-woocommerce">
+                        
+                        <!-- Búsqueda -->
+                        <div class="search-box">
+                            <label for="product-search" class="screen-reader-text">Buscar productos:</label>
+                            <input type="search" id="product-search" name="s" value="<?php echo esc_attr($search); ?>" placeholder="Buscar productos...">
+                            <input type="submit" id="search-submit" class="button" value="Buscar">
+                        </div>
+                        
+                        <!-- Filtro de categorías -->
+                        <div class="category-filter">
+                            <label for="category-filter">Filtrar por categoría:</label>
+                            <select name="category" id="category-filter">
+                                <option value="0">Todas las categorías</option>
+                                <?php foreach ($product_categories as $cat) : ?>
+                                    <option value="<?php echo esc_attr($cat->term_id); ?>" <?php selected($category, $cat->term_id); ?>>
+                                        <?php echo esc_html($cat->name); ?> (<?php echo esc_html($cat->count); ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        
+                        <!-- Filtro de productos reservables -->
+                        <div class="reservable-filter">
+                            <label for="reservable-filter">Estado de reserva:</label>
+                            <select name="reservable_filter" id="reservable-filter">
+                                <option value="" <?php selected($reservable_filter, ''); ?>>Todos</option>
+                                <option value="yes" <?php selected($reservable_filter, 'yes'); ?>>Reservables</option>
+                                <option value="no" <?php selected($reservable_filter, 'no'); ?>>No reservables</option>
+                            </select>
+                        </div>
+                        
+                        <input type="submit" class="button" value="Filtrar">
+                        <?php if (!empty($search) || $category > 0 || !empty($reservable_filter)) : ?>
+                            <a href="<?php echo admin_url('admin.php?page=reserva-woocommerce'); ?>" class="button">Limpiar filtros</a>
+                        <?php endif; ?>
+                    </form>
+                </div>
             </div>
 
             <!-- Formulario de productos -->
