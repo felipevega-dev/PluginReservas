@@ -237,15 +237,24 @@ function reserva_guardar_reserva($reserva_data, $items_data) {
         // Verificar si es un producto de WooCommerce o de la base de datos antigua
         if (isset($item['producto_wc']) && $item['producto_wc'] === true) {
             // Producto de WooCommerce
-            if (function_exists('wc_get_product')) {
+            // Primero intentamos usar el nombre que viene desde el formulario
+            if (isset($item['producto']) && !empty($item['producto'])) {
+                $producto_nombre = $item['producto'];
+                error_log('Usando nombre de producto desde el formulario: ' . $producto_nombre);
+            }
+            // Si no hay nombre en el formulario, intentamos obtenerlo de WooCommerce
+            else if (function_exists('wc_get_product')) {
                 $producto_wc = wc_get_product($item['producto_id']);
                 if ($producto_wc) {
                     $producto_nombre = $producto_wc->get_name();
+                    error_log('Usando nombre de producto desde WooCommerce: ' . $producto_nombre);
                 } else {
                     $producto_nombre = 'Producto WC #' . $item['producto_id'];
+                    error_log('No se encontró el producto en WooCommerce: ' . $item['producto_id']);
                 }
             } else {
                 $producto_nombre = 'Producto WC #' . $item['producto_id'];
+                error_log('WooCommerce no está activo o disponible');
             }
             
             // Para productos de WooCommerce, usamos directamente la talla enviada
@@ -263,13 +272,26 @@ function reserva_guardar_reserva($reserva_data, $items_data) {
             );
         } else {
             // Producto de la base de datos antigua
-            $producto_nombre = $wpdb->get_var(
-                $wpdb->prepare("SELECT nombre FROM {$wpdb->prefix}reservas_productos WHERE id = %d", $item['producto_id'])
-            );
+            // Primero intentamos usar el nombre que viene desde el formulario
+            if (isset($item['producto']) && !empty($item['producto'])) {
+                $producto_nombre = $item['producto'];
+                error_log('Usando nombre de producto desde el formulario (DB antigua): ' . $producto_nombre);
+            } else {
+                // Si no tenemos el nombre en el formulario, lo buscamos en la base de datos
+                $producto_nombre = $wpdb->get_var(
+                    $wpdb->prepare("SELECT nombre FROM {$wpdb->prefix}reservas_productos WHERE id = %d", $item['producto_id'])
+                );
+                error_log('Usando nombre de producto desde DB antigua: ' . $producto_nombre);
+            }
             
-            $talla_nombre = $wpdb->get_var(
-                $wpdb->prepare("SELECT talla FROM {$wpdb->prefix}reservas_tallas WHERE id = %d", $item['talla_id'])
-            );
+            // Obtenemos la talla de la base de datos o del formulario
+            if (isset($item['talla']) && !empty($item['talla'])) {
+                $talla_nombre = $item['talla'];
+            } else {
+                $talla_nombre = $wpdb->get_var(
+                    $wpdb->prepare("SELECT talla FROM {$wpdb->prefix}reservas_tallas WHERE id = %d", $item['talla_id'])
+                );
+            }
             
             $productos_json[] = array(
                 'producto' => $producto_nombre ?? 'Producto #' . $item['producto_id'],
