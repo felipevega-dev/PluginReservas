@@ -221,6 +221,70 @@ function reserva_product_column_content($column, $post_id) {
 add_action('manage_product_posts_custom_column', 'reserva_product_column_content', 10, 2);
 
 /**
+ * Cargar scripts y estilos en páginas de administración específicas
+ */
+function reserva_admin_scripts() {
+    // Detectar la página actual
+    global $pagenow, $typenow;
+    $page = isset($_GET['page']) ? $_GET['page'] : '';
+    
+    error_log("Cargando admin scripts - Página: {$pagenow}, Type: {$typenow}, Custom page: {$page}");
+    
+    // Cargar en la página específica de WooCommerce para Reservas
+    if ($page === 'reserva-woocommerce') {
+        error_log('Cargando scripts para página reserva-woocommerce');
+        
+        // Cargar jQuery explícitamente
+        wp_enqueue_script('jquery');
+        
+        // Cargar los scripts y estilos necesarios
+        wp_enqueue_style('reserva-admin-css', plugin_dir_url(__FILE__) . '../../assets/css/admin-style.css', array(), time());
+        wp_enqueue_script('reserva-wc-admin-js', plugin_dir_url(__FILE__) . '../../assets/js/wc-admin.js', array('jquery'), time(), true);
+        
+        // Agregar variables para el script
+        wp_localize_script('reserva-wc-admin-js', 'reservaWC', array(
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('reserva_wc_nonce')
+        ));
+        
+        // Imprimir JS directamente para depuración
+        add_action('admin_footer', 'reserva_print_debug_js');
+    }
+}
+add_action('admin_enqueue_scripts', 'reserva_admin_scripts');
+
+/**
+ * Imprimir JavaScript de depuración directamente en el pie de página
+ */
+function reserva_print_debug_js() {
+    ?>
+    <script type="text/javascript">
+    jQuery(document).ready(function($) {
+        console.log('*** SCRIPT DE DEPURACIÓN DIRECTA ***');
+        console.log('Formulario presente:', $('#reserva-products-form').length);
+        console.log('Total checkboxes:', $('input[type="checkbox"]').length);
+        console.log('Checkboxes reservable:', $('input[name^="reservable"]').length);
+        
+        // Rastrear eventos de checkboxes
+        $('input[type="checkbox"]').on('change', function() {
+            console.log('Checkbox cambiado:', $(this).attr('name'), 'Valor:', $(this).is(':checked'));
+        });
+        
+        // Rastrear envío de formulario
+        $('#reserva-products-form').on('submit', function(e) {
+            console.log('FORMULARIO ENVIÁNDOSE');
+            var data = [];
+            $('input[name^="reservable"]:checked').each(function() {
+                data.push($(this).attr('name'));
+            });
+            console.log('Datos a enviar:', data);
+        });
+    });
+    </script>
+    <?php
+}
+
+/**
  * Get a WooCommerce product by its slug
  * 
  * @param string $slug Product slug
@@ -249,11 +313,11 @@ function reserva_get_woocommerce_product_by_slug($slug) {
         // Check if the product is marked as reservable
         $reservable = get_post_meta($product->get_id(), '_reservable', true);
         
-        if ($reservable === 'yes') {
-            return $product;
-        } else {
-            error_log('El producto con slug: ' . $slug . ' no está marcado como reservable');
-        }
+        // Debugging
+        error_log('Verificando producto WooCommerce: ' . $product->get_name() . ' (ID: ' . $product->get_id() . '), Reservable: ' . $reservable);
+        
+        // Permitir productos aunque no estén marcados como reservables (para compatibilidad)
+        return $product;
     } else {
         error_log('No se encontró ningún producto con slug: ' . $slug);
     }

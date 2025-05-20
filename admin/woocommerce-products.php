@@ -26,13 +26,28 @@ function reserva_register_woocommerce_products_menu() {
 // Registrar scripts y estilos para la página de admin
 function reserva_woocommerce_admin_scripts() {
     $screen = get_current_screen();
-    if ($screen && $screen->id === 'reservas_page_reserva-woocommerce') {
-        wp_enqueue_style('reserva-admin-styles', plugin_dir_url(__FILE__) . '../assets/css/admin-style.css', array(), '1.0.0');
-        wp_enqueue_script('reserva-wc-admin', plugin_dir_url(__FILE__) . '../assets/js/wc-admin.js', array('jquery'), '1.0.0', true);
+    error_log('Screen ID: ' . ($screen ? $screen->id : 'null'));
+    
+    // Comprobar si estamos en la página de WooCommerce del plugin
+    if (isset($_GET['page']) && $_GET['page'] === 'reserva-woocommerce') {
+        error_log('Cargando scripts de WooCommerce para Reservas');
+        
+        // Asegurar que jQuery está cargado
+        wp_enqueue_script('jquery');
+        
+        // Cargar estilos y scripts
+        wp_enqueue_style('reserva-admin-styles', plugin_dir_url(__FILE__) . '../assets/css/admin-style.css', array(), '1.0.1');
+        wp_enqueue_script('reserva-wc-admin', plugin_dir_url(__FILE__) . '../assets/js/wc-admin.js', array('jquery'), '1.0.1', true);
+        
+        // Pasar variables a JavaScript
         wp_localize_script('reserva-wc-admin', 'reservaWC', array(
             'ajaxurl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('reserva_wc_ajax_nonce')
+            'nonce' => wp_create_nonce('reserva_wc_ajax_nonce'),
+            'debug' => true
         ));
+        
+        // Debug - Verificar que se están cargando los scripts
+        error_log('Scripts y estilos de WooCommerce cargados');
     }
 }
 add_action('admin_menu', 'reserva_register_woocommerce_products_menu', 21);
@@ -71,16 +86,96 @@ function reserva_woocommerce_admin_page() {
         return;
     }
 
-    // Process bulk actions
-    if (isset($_POST['action']) && $_POST['action'] == 'update_reservable_status' && isset($_POST['reserva_wc_nonce']) && wp_verify_nonce($_POST['reserva_wc_nonce'], 'reserva_update_wc_products')) {
-        if (isset($_POST['product_ids']) && is_array($_POST['product_ids'])) {
-            $updated = 0;
-            foreach ($_POST['product_ids'] as $product_id) {
-                $reservable = isset($_POST['reservable'][$product_id]) ? 'yes' : 'no';
-                update_post_meta($product_id, '_reservable', $reservable);
-                $updated++;
+    // Process form submissions
+    error_log('Procesando envío de formulario');
+    
+    // Depurar todos los datos POST
+    error_log('Contenido completo de POST: ' . print_r($_POST, true));
+    error_log('Contenido completo de REQUEST: ' . print_r($_REQUEST, true));
+    
+    if (isset($_POST['action'])) {
+        error_log('Action presente: ' . $_POST['action']);
+    } else {
+        error_log('Action no encontrado en POST');
+    }
+    
+    if (isset($_POST['reserva_wc_nonce'])) {
+        error_log('Nonce presente: ' . $_POST['reserva_wc_nonce']);
+        $nonce_valid = wp_verify_nonce($_POST['reserva_wc_nonce'], 'reserva_update_wc_products');
+        error_log('Nonce válido: ' . ($nonce_valid ? 'Sí' : 'No'));
+    } else {
+        error_log('Nonce no encontrado en POST');
+    }
+    
+    if (isset($_POST['reservable'])) {
+        error_log('Array reservable presente con ' . count($_POST['reservable']) . ' productos seleccionados');
+        error_log('Contenido de reservable: ' . print_r($_POST['reservable'], true));
+    } else {
+        error_log('Array reservable no encontrado en POST');
+    }
+    
+    // Verificar si se ha enviado el formulario
+    if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        // MÉTODO ALTERNATIVO: Procesar directamente el arreglo reservable
+        if (isset($_POST['reservable']) && is_array($_POST['reservable'])) {
+            // Paso 1: Marcar todos los productos como no reservables
+            $args = array(
+                'status' => 'publish',
+                'limit' => -1,
+                'return' => 'ids',
+            );
+            $all_product_ids = wc_get_products($args);
+            error_log('Total de productos WooCommerce: ' . count($all_product_ids));
+            
+            foreach ($all_product_ids as $product_id) {
+                update_post_meta($product_id, '_reservable', 'no');
+                error_log("Producto ID {$product_id} marcado como NO reservable");
             }
+            
+            // Paso 2: Marcar solo los productos seleccionados como reservables
+            $updated = 0;
+            $selected_count = 0;
+            
+            foreach ($_POST['reservable'] as $product_id => $value) {
+                if ($value === 'yes') {
+                    update_post_meta($product_id, '_reservable', 'yes');
+                    error_log("Producto ID {$product_id} marcado como reservable");
+                    $updated++;
+                    $selected_count++;
+                }
+            }
+            
+            error_log("Total de productos marcados como reservables: {$selected_count}");
+        } else {
+            // No hay productos seleccionados, marcar todos como no reservables
+            $args = array(
+                'status' => 'publish',
+                'limit' => -1,
+                'return' => 'ids',
+            );
+            $all_product_ids = wc_get_products($args);
+            $updated = 0;
+            
+            foreach ($all_product_ids as $product_id) {
+                $current_value = get_post_meta($product_id, '_reservable', true);
+                if ($current_value === 'yes') {
+                    update_post_meta($product_id, '_reservable', 'no');
+                    $updated++;
+                }
+            }
+            
+            error_log("No hay productos seleccionados, se han desmarcado {$updated} productos");
+            $selected_count = 0;
+        }
+        
+        if ($updated > 0) {
             echo '<div class="notice notice-success is-dismissible"><p>' . sprintf(_n('%d producto actualizado correctamente.', '%d productos actualizados correctamente.', $updated, 'reserva-form'), $updated) . '</p></div>';
+        } else {
+            echo '<div class="notice notice-info is-dismissible"><p>No se realizaron cambios en los productos.</p></div>';
+        }
+        
+        if ($selected_count === 0) {
+            echo '<div class="notice notice-warning is-dismissible"><p><strong>Advertencia:</strong> No hay productos seleccionados para reserva. Asegúrese de marcar al menos un producto para que esté disponible en el formulario de reservas.</p></div>';
         }
     }
 
@@ -107,15 +202,56 @@ function reserva_woocommerce_admin_page() {
     if (!empty($search)) {
         $args['search'] = $search;
     }
+    
+    // Filtrar por productos reservables o no reservables
+    $filtered_by_reservable = false;
+    if ($reservable_filter === 'yes' || $reservable_filter === 'no') {
+        $filtered_by_reservable = true;
+    }
 
     // Obtener productos según los filtros
     $products = wc_get_products($args);
+    
+    // Filtrar productos por estado reservable si es necesario
+    if ($filtered_by_reservable) {
+        $filtered_products = array();
+        foreach ($products as $product) {
+            $product_id = $product->get_id();
+            $is_reservable = get_post_meta($product_id, '_reservable', true) === 'yes';
+            
+            if (($reservable_filter === 'yes' && $is_reservable) || 
+                ($reservable_filter === 'no' && !$is_reservable)) {
+                $filtered_products[] = $product;
+            }
+        }
+        $products = $filtered_products;
+    }
 
     // Obtener el total de productos para la paginación
-    $total_products_args = $args;
-    $total_products_args['limit'] = -1;
-    $total_products_args['return'] = 'ids';
-    $total_products = count(wc_get_products($total_products_args));
+    // Si estamos filtrando por reservable, necesitamos contar manualmente
+    if ($filtered_by_reservable) {
+        $all_products = wc_get_products(array(
+            'status' => 'publish',
+            'limit' => -1,
+        ));
+        
+        $total_products = 0;
+        foreach ($all_products as $product) {
+            $product_id = $product->get_id();
+            $is_reservable = get_post_meta($product_id, '_reservable', true) === 'yes';
+            
+            if (($reservable_filter === 'yes' && $is_reservable) || 
+                ($reservable_filter === 'no' && !$is_reservable)) {
+                $total_products++;
+            }
+        }
+    } else {
+        $total_products_args = $args;
+        $total_products_args['limit'] = -1;
+        $total_products_args['return'] = 'ids';
+        $total_products = count(wc_get_products($total_products_args));
+    }
+    
     $total_pages = ceil($total_products / $per_page);
 
     // Obtener categorías de productos para el filtro
@@ -132,47 +268,15 @@ function reserva_woocommerce_admin_page() {
             <div class="reserva-admin-header-info">
                 <p class="reserva-admin-description">Seleccione los productos de WooCommerce que estarán disponibles en el formulario de reservas. Los productos marcados como "Disponible para reserva" aparecerán en el formulario de reservas.</p>
             </div>
+            <div class="reserva-admin-header-actions">
+                <button type="submit" form="reserva-products-form" class="button button-primary">Guardar cambios</button>
+            </div>
         </div>
 
         <div class="reserva-admin-content">
-            <!-- Filtros y búsqueda -->
+            <!-- Instrucciones -->
             <div class="reserva-admin-filters">
-                <form method="get" class="search-form">
-                    <input type="hidden" name="page" value="reserva-woocommerce">
-                    
-                    <div class="filter-row">
-                        <div class="filter-item search-box">
-                            <input type="search" name="s" value="<?php echo esc_attr($search); ?>" placeholder="Buscar productos...">
-                            <button type="submit" class="button">Buscar</button>
-                        </div>
-                        
-                        <div class="filter-item">
-                            <select name="category" class="postform">
-                                <option value="0">Todas las categorías</option>
-                                <?php foreach ($product_categories as $cat) : ?>
-                                    <option value="<?php echo esc_attr($cat->term_id); ?>" <?php selected($category, $cat->term_id); ?>>
-                                        <?php echo esc_html($cat->name); ?> (<?php echo esc_html($cat->count); ?>)
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        
-                        <div class="filter-item">
-                            <select name="reservable_filter">
-                                <option value="" <?php selected($reservable_filter, ''); ?>>Todos los productos</option>
-                                <option value="yes" <?php selected($reservable_filter, 'yes'); ?>>Reservables</option>
-                                <option value="no" <?php selected($reservable_filter, 'no'); ?>>No reservables</option>
-                            </select>
-                        </div>
-                        
-                        <div class="filter-item">
-                            <button type="submit" class="button">Filtrar</button>
-                            <?php if (!empty($search) || $category > 0 || !empty($reservable_filter)) : ?>
-                                <a href="<?php echo admin_url('admin.php?page=reserva-woocommerce'); ?>" class="button">Limpiar filtros</a>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </form>
+                <p><strong>Instrucciones:</strong> Marque las casillas de los productos que desea habilitar para reserva. Los productos marcados aparecerán en el formulario de reservas.</p>
             </div>
 
             <!-- Formulario de productos -->
@@ -217,24 +321,43 @@ function reserva_woocommerce_admin_page() {
                         <tr>
                             <td class="manage-column column-cb check-column">
                                 <input type="checkbox" id="cb-select-all-1">
+                                <span class="reserva-checkbox-help">Marcar para habilitar reserva</span>
                             </td>
                             <th scope="col" class="manage-column column-image">Imagen</th>
                             <th scope="col" class="manage-column column-name">Producto</th>
                             <th scope="col" class="manage-column column-sku">SKU</th>
                             <th scope="col" class="manage-column column-price">Precio</th>
                             <th scope="col" class="manage-column column-categories">Categorías</th>
-                            <th scope="col" class="manage-column column-reservable">Disponible para reserva</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($products)) : ?>
                             <tr>
-                                <td colspan="7" class="colspanchange">
+                                <td colspan="6" class="colspanchange">
                                     <p class="no-items">No se encontraron productos que coincidan con los criterios.</p>
                                 </td>
                             </tr>
                         <?php else : ?>
-                            <?php foreach ($products as $product) : 
+                            <?php 
+                            // Ordenar productos para que los reservables aparezcan primero
+                            $reservable_products = array();
+                            $non_reservable_products = array();
+                            
+                            foreach ($products as $product) {
+                                $product_id = $product->get_id();
+                                $is_reservable = get_post_meta($product_id, '_reservable', true) === 'yes';
+                                
+                                if ($is_reservable) {
+                                    $reservable_products[] = $product;
+                                } else {
+                                    $non_reservable_products[] = $product;
+                                }
+                            }
+                            
+                            // Combinar los arrays para mostrar primero los reservables
+                            $sorted_products = array_merge($reservable_products, $non_reservable_products);
+                            
+                            foreach ($sorted_products as $product) : 
                                 $product_id = $product->get_id();
                                 $is_reservable = get_post_meta($product_id, '_reservable', true) === 'yes';
                                 $categories = get_the_terms($product_id, 'product_cat');
@@ -244,10 +367,17 @@ function reserva_woocommerce_admin_page() {
                                         $category_names[] = $category->name;
                                     }
                                 }
-                                ?>
-                                <tr>
+                                
+                                // Añadir clase para productos reservables
+                                $row_class = $is_reservable ? 'reservable-row' : '';
+                            ?>
+                                <tr class="<?php echo esc_attr($row_class); ?>">
                                     <th scope="row" class="check-column">
-                                        <input type="checkbox" name="product_ids[]" value="<?php echo esc_attr($product_id); ?>" id="cb-select-<?php echo esc_attr($product_id); ?>">
+                                        <?php 
+                                        // Debug - mostrar datos del producto
+                                        error_log("Renderizando checkbox para producto ID: {$product_id}, Reservable: " . ($is_reservable ? 'yes' : 'no')); 
+                                        ?>
+                                        <input type="checkbox" name="reservable[<?php echo esc_attr($product_id); ?>]" value="yes" <?php checked($is_reservable); ?> id="cb-select-<?php echo esc_attr($product_id); ?>">
                                     </th>
                                     <td class="column-image">
                                         <?php echo $product->get_image(array(50, 50)); ?>
@@ -268,12 +398,6 @@ function reserva_woocommerce_admin_page() {
                                     <td class="column-categories">
                                         <?php echo !empty($category_names) ? esc_html(implode(', ', $category_names)) : '—'; ?>
                                     </td>
-                                    <td class="column-reservable">
-                                        <label class="reserva-switch">
-                                            <input type="checkbox" name="reservable[<?php echo esc_attr($product_id); ?>]" <?php checked($is_reservable); ?> class="reserva-toggle">
-                                            <span class="reserva-slider round"></span>
-                                        </label>
-                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -282,13 +406,13 @@ function reserva_woocommerce_admin_page() {
                         <tr>
                             <td class="manage-column column-cb check-column">
                                 <input type="checkbox" id="cb-select-all-2">
+                                <span class="reserva-checkbox-help">Marcar para habilitar reserva</span>
                             </td>
                             <th scope="col" class="manage-column column-image">Imagen</th>
                             <th scope="col" class="manage-column column-name">Producto</th>
                             <th scope="col" class="manage-column column-sku">SKU</th>
                             <th scope="col" class="manage-column column-price">Precio</th>
                             <th scope="col" class="manage-column column-categories">Categorías</th>
-                            <th scope="col" class="manage-column column-reservable">Disponible para reserva</th>
                         </tr>
                     </tfoot>
                 </table>

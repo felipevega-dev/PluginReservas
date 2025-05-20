@@ -159,9 +159,11 @@ function procesar_reserva() {
                                 'producto_id' => $product_id,
                                 'producto_wc' => true, // Marcar como producto de WooCommerce
                                 'producto_slug' => $prod_slug,
+                                'producto' => $product_name, // Añadir el nombre del producto
                                 'talla' => $talla,
                                 'cantidad' => $cant,
-                                'precio_unitario' => $precio_unitario
+                                'precio_unitario' => $precio_unitario,
+                                'subtotal' => $subtotal
                             );
                             
                             error_log('Item WooCommerce agregado correctamente: ' . $product_name . ', Talla: ' . $talla . ', Precio: ' . $precio_unitario);
@@ -184,9 +186,13 @@ function procesar_reserva() {
                                     $items_data[] = array(
                                         'producto_id' => $producto_db->id,
                                         'producto_wc' => false, // Marcar como producto de la base de datos antigua
+                                        'producto_slug' => $prod_slug,
+                                        'producto' => $producto_db->nombre, // Añadir el nombre del producto
                                         'talla_id' => $talla_id,
+                                        'talla' => $talla,
                                         'cantidad' => $cant,
-                                        'precio_unitario' => $unitPrice
+                                        'precio_unitario' => $unitPrice,
+                                        'subtotal' => $subtotal
                                     );
                                     
                                     error_log('Item DB antigua agregado correctamente');
