@@ -65,16 +65,27 @@ function reserva_admin_dashboard() {
     
     // Mostrar estadísticas de productos
     foreach ($product_stats as $slug => $info) {
-        // Obtener información del producto (WooCommerce o base de datos)
-        $product_info = reserva_get_product_info_for_dashboard($slug);
+        // Comprobar si existe el nombre del producto directamente en las estadísticas
+        if (isset($info['nombre']) && !empty($info['nombre'])) {
+            $product_name = $info['nombre'];
+            error_log("Usando nombre de producto desde stats: {$product_name}");
+            // Obtener información adicional del producto (imagen)
+            $product_info = reserva_get_product_info_for_dashboard($slug);
+            $imagen_url = !empty($product_info['imagen_url']) ? $product_info['imagen_url'] : plugins_url('assets/images/product-placeholder.jpg', dirname(__FILE__));
+        } else {
+            // Fallback al método anterior
+            $product_info = reserva_get_product_info_for_dashboard($slug);
+            $product_name = $product_info['nombre'];
+            $imagen_url = $product_info['imagen_url'];
+        }
         
-        if (!empty($product_info)) {
+        if (!empty($product_name)) {
             echo '<div class="reserva-stat-card reserva-product-card">';
             echo '<div class="card-header">';
-            echo '<div class="card-img"><img src="' . esc_url($product_info['imagen_url']) . '" alt="' . esc_attr($product_info['nombre']) . '"></div>';
+            echo '<div class="card-img"><img src="' . esc_url($imagen_url) . '" alt="' . esc_attr($product_name) . '"></div>';
             echo '</div>';
             echo '<div class="card-content">';
-            echo '<h2>' . esc_html($product_info['nombre']) . '</h2>';
+            echo '<h2>' . esc_html($product_name) . '</h2>';
             echo '<div class="card-stats">';
             echo '<p class="reserva-stat-number">' . esc_html($info['cantidad']) . ' <span class="reserva-stat-unit">unidades</span></p>';
             echo '<p class="reserva-stat-subtitle">Valor Total: $' . number_format($info['total'], 0, ',', '.') . '</p>';
@@ -523,12 +534,21 @@ function reserva_admin_dashboard() {
     
     $i = 0;
     foreach ($product_stats as $slug => $info) {
-        $product_info = reserva_get_product_info_for_dashboard($slug);
-        if (!empty($product_info)) {
-            $product_labels[] = $product_info['nombre'];
+        // Usar directamente el nombre guardado en las estadísticas si está disponible
+        if (isset($info['nombre']) && !empty($info['nombre'])) {
+            $product_labels[] = $info['nombre'];
             $product_data[] = $info['cantidad'];
             $product_values[] = $info['total'];
             $i++;
+        } else {
+            // Fallback al método anterior
+            $product_info = reserva_get_product_info_for_dashboard($slug);
+            if (!empty($product_info)) {
+                $product_labels[] = $product_info['nombre'];
+                $product_data[] = $info['cantidad'];
+                $product_values[] = $info['total'];
+                $i++;
+            }
         }
     }
     
@@ -764,93 +784,36 @@ function reserva_get_product_stats() {
     
     $stats = array();
     
-    // Obtener productos reservados desde la tabla de items
-    $sql = "SELECT ri.producto_slug, ri.talla, SUM(ri.cantidad) as cantidad_total, SUM(ri.precio * ri.cantidad) as total 
-           FROM {$wpdb->prefix}reservas_items ri 
-           GROUP BY ri.producto_slug, ri.talla";
-    
-    $resultados = $wpdb->get_results($sql);
-    
-    // Organizar resultados por producto
-    foreach ($resultados as $resultado) {
-        $slug = $resultado->producto_slug;
-        $talla = $resultado->talla;
-        
-        if (!isset($stats[$slug])) {
-            $stats[$slug] = array(
-                'cantidad' => 0,
-                'total' => 0,
-                'tallas' => array()
-            );
-        }
-        
-        $stats[$slug]['cantidad'] += $resultado->cantidad_total;
-        $stats[$slug]['total'] += $resultado->total;
-        
-        if (!isset($stats[$slug]['tallas'][$talla])) {
-            $stats[$slug]['tallas'][$talla] = array(
-                'cantidad' => 0,
-                'total' => 0
-            );
-        }
-        
-        $stats[$slug]['tallas'][$talla]['cantidad'] += $resultado->cantidad_total;
-        $stats[$slug]['tallas'][$talla]['total'] += $resultado->total;
-    }
-    
-    // Obtener datos de las reservas directamente (para productos de WooCommerce)
-    $reservas = $wpdb->get_results("SELECT id, productos, product_details FROM {$wpdb->prefix}reservas");
+    // Obtener directamente las reservas con sus productos (como en list.php y detail.php)
+    $reservas = $wpdb->get_results("SELECT id, productos FROM {$wpdb->prefix}reservas ORDER BY id DESC");
     
     foreach ($reservas as $reserva) {
-        // Intentar primero con product_details (formato más nuevo)
-        $detalles = json_decode($reserva->product_details, true);
-        
-        // Si no hay datos en product_details, intentar con productos
-        if (empty($detalles) || !is_array($detalles)) {
-            $detalles = json_decode($reserva->productos, true);
-        }
-        
-        if (is_array($detalles)) {
+        $detalles = json_decode($reserva->productos, true);
+        if (is_array($detalles) && !empty($detalles)) {
             foreach ($detalles as $detalle) {
-                // Verificar si es un producto de WooCommerce
-                $is_wc_product = isset($detalle['producto_wc']) && $detalle['producto_wc'] === true;
-                
-                // Obtener el slug del producto
-                $slug = isset($detalle['producto_slug']) ? $detalle['producto_slug'] : '';
-                
-                // Si no hay slug pero hay ID de producto WooCommerce, intentar obtenerlo
-                if (empty($slug) && $is_wc_product && isset($detalle['producto_id']) && function_exists('wc_get_product')) {
-                    $product = wc_get_product($detalle['producto_id']);
-                    if ($product) {
-                        $slug = $product->get_slug();
-                    }
-                }
-                
-                // Si aún no tenemos slug, usar el nombre del producto como identificador
-                if (empty($slug) && isset($detalle['producto'])) {
-                    $slug = sanitize_title($detalle['producto']);
-                }
-                
-                if (!empty($slug)) {
-                    $talla = isset($detalle['talla']) ? $detalle['talla'] : 'Sin talla';
-                    $cantidad = isset($detalle['cantidad']) ? intval($detalle['cantidad']) : 0;
+                if (isset($detalle['producto']) && isset($detalle['talla']) && isset($detalle['cantidad'])) {
+                    $producto_nombre = trim($detalle['producto']);
+                    $talla = trim($detalle['talla']);
+                    $cantidad = intval($detalle['cantidad']);
                     $precio = isset($detalle['precio']) ? floatval($detalle['precio']) : 0;
                     $subtotal = isset($detalle['subtotal']) ? floatval($detalle['subtotal']) : ($precio * $cantidad);
                     
-                    // Inicializar el producto en las estadísticas si no existe
+                    // Generar un slug único para el producto
+                    $slug = sanitize_title($producto_nombre);
+                    
+                    // Inicializar el registro del producto si no existe
                     if (!isset($stats[$slug])) {
                         $stats[$slug] = array(
                             'cantidad' => 0,
                             'total' => 0,
                             'tallas' => array(),
-                            'woocommerce' => $is_wc_product
+                            'nombre' => $producto_nombre // Usar el nombre exacto del JSON
                         );
                     }
                     
-                    // Actualizar estadísticas generales del producto
+                    // Actualizar estadísticas
                     $stats[$slug]['cantidad'] += $cantidad;
                     $stats[$slug]['total'] += $subtotal;
-                    $stats[$slug]['woocommerce'] = $stats[$slug]['woocommerce'] || $is_wc_product;
                     
                     // Actualizar estadísticas por talla
                     if (!isset($stats[$slug]['tallas'][$talla])) {
@@ -867,6 +830,7 @@ function reserva_get_product_stats() {
         }
     }
     
+    error_log('Estadísticas de productos generadas: ' . count($stats) . ' productos diferentes');
     return $stats;
 }
 
@@ -874,7 +838,52 @@ function reserva_get_product_stats() {
  * Obtener información de un producto para el dashboard
  */
 function reserva_get_product_info_for_dashboard($slug) {
-    // Primero intentar obtener desde WooCommerce
+    // Primero verificar si tenemos el nombre real del producto y la imagen desde las reservas JSON
+    global $wpdb;
+    $nombre_real = null;
+    $imagen_url = null;
+    
+    $sql = "SELECT DISTINCT productos FROM {$wpdb->prefix}reservas WHERE productos LIKE %s ORDER BY id DESC LIMIT 5";
+    $resultados = $wpdb->get_results($wpdb->prepare($sql, '%' . $wpdb->esc_like($slug) . '%'));
+    
+    foreach ($resultados as $resultado) {
+        $detalles = json_decode($resultado->productos, true);
+        if (is_array($detalles)) {
+            foreach ($detalles as $detalle) {
+                if (isset($detalle['producto']) && isset($detalle['talla'])) {
+                    $nombre = trim($detalle['producto']);
+                    $slug_generado = sanitize_title($nombre);
+                    
+                    // Si el slug coincide o el nombre contiene el slug
+                    if ($slug_generado === $slug || strpos(strtolower($nombre), str_replace('-', ' ', $slug)) !== false) {
+                        $nombre_real = $nombre;
+                        // Buscar la imagen si está disponible en el JSON
+                        if (isset($detalle['img']) && !empty($detalle['img'])) {
+                            $imagen_url = $detalle['img'];
+                            error_log("Encontrada imagen para el producto: {$imagen_url}");
+                        }
+                        error_log("Encontrado nombre real de producto: {$nombre_real} para slug: {$slug}");
+                        break 2; // Salir de ambos loops
+                    }
+                }
+            }
+        }
+    }
+    
+    // Si encontramos el nombre real, lo usamos
+    if ($nombre_real) {
+        // Si no encontramos una imagen en el JSON, usamos el placeholder
+        if (!$imagen_url) {
+            $imagen_url = plugins_url('assets/images/product-placeholder.jpg', dirname(__FILE__));
+        }
+        
+        return array(
+            'nombre' => $nombre_real,
+            'imagen_url' => $imagen_url
+        );
+    }
+    
+    // Intentar obtener desde WooCommerce
     if (function_exists('reserva_is_woocommerce_active') && reserva_is_woocommerce_active()) {
         // Intentar obtener el producto por slug primero
         error_log("Buscando producto WooCommerce con slug: {$slug}");
@@ -892,24 +901,25 @@ function reserva_get_product_info_for_dashboard($slug) {
         }
         
         // Intentar buscar por la función estándar de WooCommerce
-        $wc_products = wc_get_products(array(
-            'status' => 'publish',
-            'limit' => 1,
-            'slug' => $slug
-        ));
-        
-        if (!empty($wc_products)) {
-            $product = $wc_products[0];
-            error_log("Producto WooCommerce encontrado por wc_get_products: " . $product->get_name());
-            return array(
-                'nombre' => $product->get_name(),
-                'imagen_url' => wp_get_attachment_url($product->get_image_id()) ?: plugins_url('assets/images/product-placeholder.jpg', dirname(__FILE__))
-            );
+        if (function_exists('wc_get_products')) {
+            $wc_products = wc_get_products(array(
+                'status' => 'publish',
+                'limit' => 1,
+                'slug' => $slug
+            ));
+            
+            if (!empty($wc_products)) {
+                $product = $wc_products[0];
+                error_log("Producto WooCommerce encontrado por wc_get_products: " . $product->get_name());
+                return array(
+                    'nombre' => $product->get_name(),
+                    'imagen_url' => wp_get_attachment_url($product->get_image_id()) ?: plugins_url('assets/images/product-placeholder.jpg', dirname(__FILE__))
+                );
+            }
         }
     }
     
     // Si no se encuentra en WooCommerce, buscar en la base de datos antigua
-    global $wpdb;
     $producto = $wpdb->get_row($wpdb->prepare(
         "SELECT * FROM {$wpdb->prefix}reservas_productos WHERE slug = %s",
         $slug
@@ -935,10 +945,17 @@ function reserva_get_product_info_for_dashboard($slug) {
         'poleron' => array(
             'nombre' => 'Polerón Buzo Alianza Francesa',
             'imagen_url' => plugins_url('assets/images/poleronypantalon.jpg', dirname(__FILE__))
+        ),
+        'poleron-buzo-nido-gris' => array(
+            'nombre' => 'Poleron Buzo Nido Gris',
+            'imagen_url' => plugins_url('assets/images/product-placeholder.jpg', dirname(__FILE__))
         )
     );
     
-    return isset($productos_conocidos[$slug]) ? $productos_conocidos[$slug] : array();
+    return isset($productos_conocidos[$slug]) ? $productos_conocidos[$slug] : array(
+        'nombre' => ucwords(str_replace('-', ' ', $slug)),
+        'imagen_url' => plugins_url('assets/images/product-placeholder.jpg', dirname(__FILE__))
+    );
 }
 
 /**
