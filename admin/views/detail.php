@@ -184,40 +184,13 @@ $logo_url = plugins_url('assets/images/logo.jpg', dirname(dirname(__FILE__)));
                         <div class="productos-grid">
                             <?php foreach ($productos_mostrar as $producto): ?>
                                 <div class="producto-card">
-                                    <div class="producto-imagen">
-                                        <img src="<?php echo esc_url($producto['img_url']); ?>" alt="<?php echo esc_attr($producto['nombre']); ?>">
-                                    </div>
+                                    <!-- Imagen de producto ocultada por problemas de carga -->
                                     <div class="producto-info">
                                         <h4><?php echo esc_html($producto['nombre']); ?></h4>
                                         <p class="producto-talla"><strong>Talla:</strong> <?php echo esc_html($producto['talla']); ?></p>
                                         <p class="producto-cantidad"><strong>Cantidad:</strong> <?php echo esc_html($producto['cantidad']); ?></p>
                                         <p class="producto-precio"><strong>Precio unitario:</strong> $<?php echo number_format($producto['precio_unitario'], 0, ',', '.'); ?></p>
                                         <p class="producto-subtotal"><strong>Subtotal:</strong> $<?php echo number_format($producto['subtotal'], 0, ',', '.'); ?></p>
-                                        
-                                        <?php 
-                                        // Generar datos para el modal de detalles por tallas
-                                        $tallas_data = array();
-                                        if(isset($producto['detalles_tallas']) && is_array($producto['detalles_tallas'])) {
-                                            $tallas_data = $producto['detalles_tallas'];
-                                        } else {
-                                            // Si no hay detalles, crear un objeto con la talla actual
-                                            $talla_actual = $producto['talla'];
-                                            $tallas_data[$talla_actual] = array(
-                                                'cantidad' => $producto['cantidad'],
-                                                'precio_unitario' => $producto['precio_unitario'],
-                                                'subtotal' => $producto['subtotal']
-                                            );
-                                        }
-                                        
-                                        // Codificar en JSON para pasar al JavaScript
-                                        $tallas_json = htmlspecialchars(json_encode($tallas_data), ENT_QUOTES, 'UTF-8');
-                                        ?>
-                                        
-                                        <a href="#" class="view-size-details button button-small" 
-                                           data-producto="<?php echo esc_attr($producto['nombre']); ?>"
-                                           data-tallas='<?php echo $tallas_json; ?>'>
-                                            <span class="dashicons dashicons-chart-bar"></span> Ver distribución por tallas
-                                        </a>
                                     </div>
                                 </div>
                             <?php endforeach; ?>

@@ -2,7 +2,7 @@
 /*
 Plugin Name: Formulario de reserva
 Description: Plugin para gestionar reservas de uniformes escolares (Scolari).
-Version: 3.2.4
+Version: 3.2.7
 Author: Felipe Vega
 Text Domain: reserva-form
 */

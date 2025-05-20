@@ -69,9 +69,36 @@ function reserva_admin_dashboard() {
         if (isset($info['nombre']) && !empty($info['nombre'])) {
             $product_name = $info['nombre'];
             error_log("Usando nombre de producto desde stats: {$product_name}");
-            // Obtener información adicional del producto (imagen)
-            $product_info = reserva_get_product_info_for_dashboard($slug);
-            $imagen_url = !empty($product_info['imagen_url']) ? $product_info['imagen_url'] : plugins_url('assets/images/product-placeholder.jpg', dirname(__FILE__));
+            
+            // Obtener imagen de la base de datos o desde el campo JSON
+            // Buscar en las reservas recientes para encontrar la imagen del producto
+            $imagen_url = null;
+            $json_data = $wpdb->get_var($wpdb->prepare(
+                "SELECT productos FROM {$wpdb->prefix}reservas WHERE productos LIKE %s ORDER BY id DESC LIMIT 1",
+                '%' . $wpdb->esc_like($product_name) . '%'
+            ));
+            
+            if ($json_data) {
+                $detalles = json_decode($json_data, true);
+                if (is_array($detalles)) {
+                    foreach ($detalles as $detalle) {
+                        if (isset($detalle['producto']) && $detalle['producto'] === $product_name && isset($detalle['img'])) {
+                            $imagen_url = $detalle['img'];
+                            error_log("Imagen encontrada para {$product_name}: {$imagen_url}");
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // Si no se encontró imagen, usar el fallback
+            if (!$imagen_url) {
+                // Intentar obtener información adicional del producto
+                $product_info = reserva_get_product_info_for_dashboard($slug);
+                $imagen_url = !empty($product_info['imagen_url']) ? 
+                            $product_info['imagen_url'] : 
+                            plugins_url('assets/images/product-placeholder.jpg', dirname(__FILE__));
+            }
         } else {
             // Fallback al método anterior
             $product_info = reserva_get_product_info_for_dashboard($slug);
@@ -81,16 +108,15 @@ function reserva_admin_dashboard() {
         
         if (!empty($product_name)) {
             echo '<div class="reserva-stat-card reserva-product-card">';
-            echo '<div class="card-header">';
-            echo '<div class="card-img"><img src="' . esc_url($imagen_url) . '" alt="' . esc_attr($product_name) . '"></div>';
-            echo '</div>';
+            // Eliminar la sección de imagen para evitar problemas
             echo '<div class="card-content">';
             echo '<h2>' . esc_html($product_name) . '</h2>';
             echo '<div class="card-stats">';
             echo '<p class="reserva-stat-number">' . esc_html($info['cantidad']) . ' <span class="reserva-stat-unit">unidades</span></p>';
             echo '<p class="reserva-stat-subtitle">Valor Total: $' . number_format($info['total'], 0, ',', '.') . '</p>';
             echo '</div>';
-            echo '<a href="#" class="button button-primary view-details" data-product="' . esc_attr($slug) . '">Ver Detalle por Tallas</a>';
+            // Comentamos el botón de detalle por tallas ya que presenta problemas
+            // echo '<a href="#" class="button button-primary view-details" data-product="' . esc_attr($slug) . '">Ver Detalle por Tallas</a>';
             echo '</div>';
             echo '</div>';
         }
@@ -530,10 +556,25 @@ function reserva_admin_dashboard() {
     $product_labels = array();
     $product_data = array();
     $product_values = array();
-    $product_colors = array('#4e73df', '#1cc88a', '#36b9cc');
+    $product_colors = array('#4e73df', '#1cc88a', '#36b9cc', '#fd7e14', '#6f42c1', '#20c997', '#fd7e14');
+    
+    // Ordenar productos por valor total (de mayor a menor)
+    uasort($product_stats, function($a, $b) {
+        return $b['total'] - $a['total'];
+    });
+    
+    // Obtener producto con mayor valor total para destacarlo
+    $top_product = null;
+    $top_product_value = 0;
     
     $i = 0;
     foreach ($product_stats as $slug => $info) {
+        // Actualizar el producto con mayor valor si corresponde
+        if ($info['total'] > $top_product_value) {
+            $top_product_value = $info['total'];
+            $top_product = isset($info['nombre']) ? $info['nombre'] : '';
+        }
+        
         // Usar directamente el nombre guardado en las estadísticas si está disponible
         if (isset($info['nombre']) && !empty($info['nombre'])) {
             $product_labels[] = $info['nombre'];
@@ -550,7 +591,13 @@ function reserva_admin_dashboard() {
                 $i++;
             }
         }
+        
+        // Limitar a 7 productos para que el gráfico sea manejable
+        if ($i >= 7) break;
     }
+    
+    // Registrar el producto más vendido para depuración
+    error_log("Producto con mayor valor total: {$top_product} con ${$top_product_value}");
     
     // Datos para el gráfico de tendencia (simulado)
     $trend_labels = array();
@@ -610,6 +657,15 @@ function reserva_admin_dashboard() {
             
             // Gráfico de valores totales por producto
             var valuesCtx = document.getElementById("productValues").getContext("2d");
+            // Crear un array de colores dinamicamente desde PHP
+            var backgroundColors = ' . json_encode(array_map(function($i) use ($product_colors) { 
+                return $i === 0 ? '#fd7e14' : $product_colors[0]; 
+            }, range(0, count($product_labels) - 1))) . ';
+            
+            var hoverBackgroundColors = ' . json_encode(array_map(function($i) { 
+                return $i === 0 ? '#e76b02' : '#2e59d9'; 
+            }, range(0, count($product_labels) - 1))) . ';
+            
             var valuesChart = new Chart(valuesCtx, {
                 type: "bar",
                 data: {
@@ -617,8 +673,8 @@ function reserva_admin_dashboard() {
                     datasets: [{
                         label: "Valor en $",
                         data: ' . json_encode($product_values) . ',
-                        backgroundColor: ' . json_encode($product_colors) . ',
-                        hoverBackgroundColor: ["#2e59d9", "#17a673", "#2c9faf"],
+                        backgroundColor: backgroundColors,
+                        hoverBackgroundColor: hoverBackgroundColors,
                         borderWidth: 0
                     }]
                 },
@@ -1008,8 +1064,19 @@ function reserva_ajax_get_product_size_details() {
                 // Verificar si corresponde al producto buscado
                 $es_este_producto = false;
                 
+                // Verificar primero por slug exacto
                 if (isset($detalle['producto_slug']) && $detalle['producto_slug'] === $product) {
                     $es_este_producto = true;
+                }
+                
+                // Si no coincide por slug exacto, verificar por nombre de producto
+                if (!$es_este_producto && isset($detalle['producto'])) {
+                    // Generar slug a partir del nombre y comparar
+                    $slug_generado = sanitize_title($detalle['producto']);
+                    if ($slug_generado === $product) {
+                        $es_este_producto = true;
+                        error_log("Producto encontrado por nombre: {$detalle['producto']}");
+                    }
                 }
                 
                 if ($es_este_producto && isset($detalle['talla'], $detalle['cantidad'], $detalle['subtotal'])) {
@@ -1057,6 +1124,46 @@ function reserva_ajax_get_product_size_details() {
         );
         
         $total_general += $total;
+    }
+    
+    // Si no hay tallas, mostrar mensaje
+    if (empty($tallas)) {
+        error_log("No se encontraron tallas para el producto: {$product}");
+        
+        // Intentar buscar en las reservas por nombre de producto
+        $productos_encontrados = [];
+        
+        $reservas = $wpdb->get_results("SELECT productos FROM {$wpdb->prefix}reservas ORDER BY id DESC LIMIT 10");
+        foreach ($reservas as $reserva) {
+            $detalles = json_decode($reserva->productos, true);
+            if (is_array($detalles)) {
+                foreach ($detalles as $detalle) {
+                    if (isset($detalle['producto'])) {
+                        $slug_producto = sanitize_title($detalle['producto']);
+                        if ($slug_producto === $product && isset($detalle['talla'], $detalle['cantidad'], $detalle['precio'])) {
+                            $talla = $detalle['talla'];
+                            $cantidad = intval($detalle['cantidad']);
+                            $precio = floatval($detalle['precio']);
+                            $subtotal = isset($detalle['subtotal']) ? floatval($detalle['subtotal']) : ($precio * $cantidad);
+                            
+                            if (!isset($tallas[$talla])) {
+                                $tallas[$talla] = array(
+                                    'cantidad' => 0,
+                                    'total' => 0
+                                );
+                            }
+                            
+                            $tallas[$talla]['cantidad'] += $cantidad;
+                            $tallas[$talla]['total'] += $subtotal;
+                            $total_general += $subtotal;
+                            
+                            $productos_encontrados[] = $detalle['producto'];
+                            error_log("Producto encontrado por nombre en JSON: {$detalle['producto']}");
+                        }
+                    }
+                }
+            }
+        }
     }
     
     // Generar HTML para la tabla de tallas
