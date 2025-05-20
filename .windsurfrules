@@ -1,0 +1,22 @@
+# WindSurf Local Rules - Plugin de Reservas (WordPress + WooCommerce)
+# Autor: Felipe Vega
+
+## 🎯 Objetivo principal
+Lograr la **correcta integración** del sistema de reservas con los **productos existentes en WooCommerce**, eliminando el uso de productos hardcodeados o estáticos dentro del formulario.
+
+## 🔧 Cambios esperados
+- Reemplazar la carga estática de productos en el formulario por una consulta dinámica que obtenga los **productos seleccionados como "reservables"** desde WooCommerce.
+- El resto del sistema de reservas debe **mantener su funcionamiento actual**, es decir:
+  - Permitir al usuario seleccionar **uno o más productos** y **definir cantidades**.
+  - Mantener el envío del formulario.
+  - Al enviar, se debe generar una **notificación visible al administrador** (por ejemplo, en un área de notificaciones interna).
+  - El **panel de administración actual** debe seguir funcionando tal como está, sin romper funcionalidades existentes.
+
+## ⚙ Detalles técnicos
+- Plugin de WordPress desarrollado en **PHP**.
+- Se mantiene la estructura actual del plugin (`includes/data`, `templates`, `shortcodes`, etc.).
+- La interacción con WooCommerce se hará usando funciones estándar o mediante `WC_Product` / `wc_get_products()` para filtrar los productos disponibles para reserva (por ejemplo, por una categoría, etiqueta, o meta personalizada).
+
+## 💡 Nota
+Esto es una refactorización **funcional** del origen de los productos. No debe cambiar ni la lógica de reservas, ni la interfaz del formulario, ni la forma en que el administrador ve o gestiona las reservas.
+
