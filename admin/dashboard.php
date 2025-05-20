@@ -764,7 +764,7 @@ function reserva_get_product_stats() {
     
     $stats = array();
     
-    // Obtener productos reservados
+    // Obtener productos reservados desde la tabla de items
     $sql = "SELECT ri.producto_slug, ri.talla, SUM(ri.cantidad) as cantidad_total, SUM(ri.precio * ri.cantidad) as total 
            FROM {$wpdb->prefix}reservas_items ri 
            GROUP BY ri.producto_slug, ri.talla";
@@ -796,6 +796,75 @@ function reserva_get_product_stats() {
         
         $stats[$slug]['tallas'][$talla]['cantidad'] += $resultado->cantidad_total;
         $stats[$slug]['tallas'][$talla]['total'] += $resultado->total;
+    }
+    
+    // Obtener datos de las reservas directamente (para productos de WooCommerce)
+    $reservas = $wpdb->get_results("SELECT id, productos, product_details FROM {$wpdb->prefix}reservas");
+    
+    foreach ($reservas as $reserva) {
+        // Intentar primero con product_details (formato más nuevo)
+        $detalles = json_decode($reserva->product_details, true);
+        
+        // Si no hay datos en product_details, intentar con productos
+        if (empty($detalles) || !is_array($detalles)) {
+            $detalles = json_decode($reserva->productos, true);
+        }
+        
+        if (is_array($detalles)) {
+            foreach ($detalles as $detalle) {
+                // Verificar si es un producto de WooCommerce
+                $is_wc_product = isset($detalle['producto_wc']) && $detalle['producto_wc'] === true;
+                
+                // Obtener el slug del producto
+                $slug = isset($detalle['producto_slug']) ? $detalle['producto_slug'] : '';
+                
+                // Si no hay slug pero hay ID de producto WooCommerce, intentar obtenerlo
+                if (empty($slug) && $is_wc_product && isset($detalle['producto_id']) && function_exists('wc_get_product')) {
+                    $product = wc_get_product($detalle['producto_id']);
+                    if ($product) {
+                        $slug = $product->get_slug();
+                    }
+                }
+                
+                // Si aún no tenemos slug, usar el nombre del producto como identificador
+                if (empty($slug) && isset($detalle['producto'])) {
+                    $slug = sanitize_title($detalle['producto']);
+                }
+                
+                if (!empty($slug)) {
+                    $talla = isset($detalle['talla']) ? $detalle['talla'] : 'Sin talla';
+                    $cantidad = isset($detalle['cantidad']) ? intval($detalle['cantidad']) : 0;
+                    $precio = isset($detalle['precio']) ? floatval($detalle['precio']) : 0;
+                    $subtotal = isset($detalle['subtotal']) ? floatval($detalle['subtotal']) : ($precio * $cantidad);
+                    
+                    // Inicializar el producto en las estadísticas si no existe
+                    if (!isset($stats[$slug])) {
+                        $stats[$slug] = array(
+                            'cantidad' => 0,
+                            'total' => 0,
+                            'tallas' => array(),
+                            'woocommerce' => $is_wc_product
+                        );
+                    }
+                    
+                    // Actualizar estadísticas generales del producto
+                    $stats[$slug]['cantidad'] += $cantidad;
+                    $stats[$slug]['total'] += $subtotal;
+                    $stats[$slug]['woocommerce'] = $stats[$slug]['woocommerce'] || $is_wc_product;
+                    
+                    // Actualizar estadísticas por talla
+                    if (!isset($stats[$slug]['tallas'][$talla])) {
+                        $stats[$slug]['tallas'][$talla] = array(
+                            'cantidad' => 0,
+                            'total' => 0
+                        );
+                    }
+                    
+                    $stats[$slug]['tallas'][$talla]['cantidad'] += $cantidad;
+                    $stats[$slug]['tallas'][$talla]['total'] += $subtotal;
+                }
+            }
+        }
     }
     
     return $stats;

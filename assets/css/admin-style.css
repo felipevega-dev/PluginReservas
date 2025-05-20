@@ -1,0 +1,170 @@
+/**
+ * Estilos para la administración del plugin de reservas
+ */
+
+/* Estilos generales de admin */
+.reserva-admin-wrap {
+    margin: 20px 0;
+}
+
+.reserva-admin-header {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.reserva-admin-description {
+    font-size: 14px;
+    color: #555;
+    margin: 0;
+}
+
+.reserva-admin-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Filtros y búsqueda */
+.reserva-admin-filters {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.filter-item {
+    margin-bottom: 10px;
+}
+
+.filter-item input[type="search"] {
+    width: 250px;
+    padding: 5px 10px;
+}
+
+/* Tabla de productos */
+.reserva-wc-products .wp-list-table {
+    margin-top: 15px;
+}
+
+.reserva-wc-products .column-image {
+    width: 70px;
+}
+
+.reserva-wc-products .column-sku,
+.reserva-wc-products .column-price,
+.reserva-wc-products .column-reservable {
+    width: 120px;
+}
+
+/* Toggle switch para reservable */
+.reserva-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.reserva-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.reserva-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+}
+
+.reserva-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked + .reserva-slider {
+    background-color: #0073aa;
+}
+
+input:focus + .reserva-slider {
+    box-shadow: 0 0 1px #0073aa;
+}
+
+input:checked + .reserva-slider:before {
+    transform: translateX(26px);
+}
+
+.reserva-slider.round {
+    border-radius: 24px;
+}
+
+.reserva-slider.round:before {
+    border-radius: 50%;
+}
+
+/* Acciones de admin */
+.reserva-admin-actions {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    text-align: right;
+}
+
+/* Sección de ayuda */
+.reserva-admin-help {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.reserva-admin-help h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+.reserva-admin-help ul {
+    list-style-type: disc;
+    margin-left: 20px;
+}
+
+.reserva-admin-help li {
+    margin-bottom: 8px;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+    .filter-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .filter-item {
+        width: 100%;
+    }
+    
+    .filter-item input[type="search"],
+    .filter-item select {
+        width: 100%;
+    }
+}
